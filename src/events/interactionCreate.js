@@ -73,7 +73,9 @@ async function ensureAuthorized(interaction) {
 }
 
 async function handlePanelButton(interaction) {
+  console.log(`Botão recebido: panel | customId: ${interaction.customId}`);
   const [, areaId, action] = interaction.customId.split(':');
+  console.log(`Painel solicitado: area=${areaId || 'home'} action=${action || 'none'}`);
 
   if (!areaId || areaId === 'home') {
     await interaction.reply({ embeds: [createPanelEmbed()], components: createPanelRows(), ephemeral: true });
@@ -91,7 +93,7 @@ async function handlePanelButton(interaction) {
   }
 
   if (areaId === 'manual' && action === 'open') {
-    console.log('Manual aberto');
+    console.log('Manual aberto via painel: customId=panel:manual:open página=home encontrada=true');
     await interaction.reply({ embeds: [createManualHomeEmbed()], components: createManualHomeRows(), ephemeral: true });
     return;
   }
@@ -196,9 +198,12 @@ async function handlePanelButton(interaction) {
 }
 
 async function handleManualButton(interaction) {
+  console.log(`Botão recebido: manual | customId: ${interaction.customId}`);
   const [, type, pageId] = interaction.customId.split(':');
   const targetPage = type === 'page' ? pageId : type === 'back' ? 'home' : type;
+  console.log(`Página solicitada no manual: ${targetPage}`);
   const page = getManualPage(targetPage);
+  console.log(`Página encontrada no manual: ${Boolean(page)}`);
 
   if (!page) {
     await interaction.reply({ content: withEmoji('feedback', 'warning', 'Página do manual não encontrada.'), ephemeral: true });
@@ -210,6 +215,7 @@ async function handleManualButton(interaction) {
 }
 
 async function handleAdminButton(interaction) {
+  console.log(`Botão recebido: admin | customId: ${interaction.customId}`);
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
     await interaction.reply({ content: withEmoji('feedback', 'warning', 'Apenas administradores podem usar esse painel.'), ephemeral: true });
     return;

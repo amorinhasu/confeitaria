@@ -46,7 +46,8 @@
       "file": "assets/visuals/playlist/playlist-banner.gif",
       "format": "GIF",
       "size": "800x300",
-      "usage": "/playlist definir e /playlist ver"
+      "usage": "/playlist definir e /playlist ver",
+      "url": "https://cdn.discordapp.com/attachments/1506484555664850995/1511098150876872714/Copia_de_Painel_20260601_170014_0000.png?ex=6a1f3752&is=6a1de5d2&hm=0d000ef0cae1f4156a85f4e19c724729d846918f58deae061c7d12b102d9ff1a&"
     },
     "study_banner": {
       "file": "assets/visuals/estudos/estudos-kaiki-banner.png",
@@ -64,7 +65,8 @@
       "file": "assets/visuals/mimos/loja-mimos-banner.png",
       "format": "PNG",
       "size": "1200x400",
-      "usage": "/mimo loja e /mimo comprar"
+      "usage": "/mimo loja e /mimo comprar",
+      "url": "https://cdn.discordapp.com/attachments/1506484555664850995/1511098144736153660/Copia_de_Painel_20260601_170259_0000.png?ex=6a1f3750&is=6a1de5d0&hm=f84534d85b4e717a2e36860c9058a89fee9c4b59abba963bdde923117d23b62b&"
     },
     "profile_banner": {
       "url": "https://cdn.discordapp.com/attachments/1506484555664850995/1511073125750669425/2_20260601_152221_0001.png?ex=6a1f2003&is=6a1dce83&hm=f7007a8bcf0784d10992d31cf5b97de6ba9f88aad003d0950021e1b55cb677f9&",
