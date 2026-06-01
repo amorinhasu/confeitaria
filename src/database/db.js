@@ -1,16 +1,52 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const Database = require('better-sqlite3');
+const sqlite3 = require('sqlite3').verbose();
 const { databasePath } = require('../utils/config');
 
 fs.mkdirSync(path.dirname(databasePath), { recursive: true });
 
-const db = new Database(databasePath);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+const sqlite = new sqlite3.Database(databasePath);
 
-function migrate() {
-  db.exec(`
+function exec(sql) {
+  return new Promise((resolve, reject) => {
+    sqlite.exec(sql, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
+
+function run(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    sqlite.run(sql, params, function onRun(error) {
+      if (error) reject(error);
+      else resolve({ lastID: this.lastID, changes: this.changes });
+    });
+  });
+}
+
+function get(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    sqlite.get(sql, params, (error, row) => {
+      if (error) reject(error);
+      else resolve(row);
+    });
+  });
+}
+
+function all(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    sqlite.all(sql, params, (error, rows) => {
+      if (error) reject(error);
+      else resolve(rows);
+    });
+  });
+}
+
+async function migrate() {
+  await exec(`
+    PRAGMA foreign_keys = ON;
+
     CREATE TABLE IF NOT EXISTS couple_profile (
       id INTEGER PRIMARY KEY CHECK (id = 1),
       trivia_name TEXT NOT NULL DEFAULT 'Trívia',
@@ -74,10 +110,10 @@ function migrate() {
     );
   `);
 
-  db.prepare('INSERT OR IGNORE INTO couple_profile (id) VALUES (1)').run();
-  db.prepare('INSERT OR IGNORE INTO coins (id, balance) VALUES (1, 0)').run();
+  await run('INSERT OR IGNORE INTO couple_profile (id) VALUES (1)');
+  await run('INSERT OR IGNORE INTO coins (id, balance) VALUES (1, 0)');
 }
 
-migrate();
+const ready = migrate();
 
-module.exports = db;
+module.exports = { all, exec, get, ready, run };

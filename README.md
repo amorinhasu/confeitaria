@@ -7,7 +7,7 @@ Primeira versão do **Momozin**, um bot privado de casal para Discord feito para
 - Slash commands com `discord.js` v14.
 - Botões/interactions no painel principal.
 - Embeds azuis e textos personalizados do casal.
-- Banco SQLite local em `./data/momozin.sqlite` usando `better-sqlite3`.
+- Banco SQLite local em `./data/momozin.sqlite` usando `sqlite3`.
 - Recados românticos/engraçados.
 - Memórias do casal.
 - CineMomozin para filmes e séries assistidos.

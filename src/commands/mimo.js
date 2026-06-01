@@ -30,7 +30,7 @@ module.exports = {
     }
 
     const key = interaction.options.getString('item', true);
-    const result = buyGift(key);
+    const result = await buyGift(key);
 
     if (!result.ok && result.reason === 'no_coins') {
       await interaction.reply({ content: `🎁 Ainda faltam MomoCoins para comprar ${result.item.label}. Saldo: ${result.balance}.`, ephemeral: true });

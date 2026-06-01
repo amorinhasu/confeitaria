@@ -8,7 +8,7 @@ module.exports = {
     .setName('perfil')
     .setDescription('Mostra o perfil do casal Trívia e Kaiki.'),
   async execute(interaction) {
-    const profile = getProfile();
+    const profile = await getProfile();
     const days = daysSince(profile.start_date);
     const achievements = profile.achievements.split(';').map((item) => `🏆 ${item.trim()}`).join('\n');
 

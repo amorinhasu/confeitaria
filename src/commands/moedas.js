@@ -20,7 +20,7 @@ module.exports = {
     if (subcommand === 'adicionar') {
       const quantity = interaction.options.getInteger('quantidade', true);
       const reason = interaction.options.getString('motivo', true);
-      const balance = addCoins(quantity);
+      const balance = await addCoins(quantity);
       await interaction.reply({ embeds: [momozinEmbed({
         title: '🪙 MomoCoins adicionadas',
         description: `+${quantity} MomoCoins por: ${reason}`,
@@ -29,7 +29,7 @@ module.exports = {
       return;
     }
 
-    const balance = getCoins();
+    const balance = await getCoins();
     await interaction.reply({ embeds: [momozinEmbed({ title: '🪙 Cofrinho Momozin', description: `Saldo atual: **${balance} MomoCoins**.` })] });
   },
 };

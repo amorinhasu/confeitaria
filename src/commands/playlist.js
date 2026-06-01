@@ -18,12 +18,12 @@ module.exports = {
 
     if (subcommand === 'definir') {
       const link = interaction.options.getString('link', true);
-      setPlaylist(link);
+      await setPlaylist(link);
       await interaction.reply({ embeds: [momozinEmbed({ title: '🎧 Playlist salva', description: 'Link guardado. Sem Spotify API por enquanto, só o aconchego manual.' })] });
       return;
     }
 
-    const playlist = getPlaylist();
+    const playlist = await getPlaylist();
     if (!playlist) {
       await interaction.reply({ content: '🎧 Nenhuma playlist salva ainda. Use `/playlist definir`.', ephemeral: true });
       return;

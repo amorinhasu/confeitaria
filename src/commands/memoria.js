@@ -13,7 +13,7 @@ module.exports = {
       .addStringOption((option) => option.setName('descricao').setDescription('Descrição da memória.').setRequired(true))
       .addStringOption((option) => option.setName('data').setDescription('Data da memória. Ex: 2026-06-01 ou 05/06/2026.').setRequired(true))),
   async execute(interaction) {
-    addMemory(
+    await addMemory(
       interaction.options.getString('titulo', true),
       interaction.options.getString('descricao', true),
       interaction.options.getString('data', true),

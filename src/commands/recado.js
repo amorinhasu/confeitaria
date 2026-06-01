@@ -18,12 +18,12 @@ module.exports = {
 
     if (subcommand === 'adicionar') {
       const text = interaction.options.getString('texto', true);
-      addLoveNote(text);
+      await addLoveNote(text);
       await interaction.reply({ embeds: [momozinEmbed({ title: '💌 Recado salvo', description: 'O Momozin guardou essa frase no potinho azul.' })] });
       return;
     }
 
-    const note = getRandomLoveNote();
+    const note = await getRandomLoveNote();
     if (!note) {
       await interaction.reply({ content: '💌 Ainda não tem recados salvos. Use `/recado adicionar` primeiro.', ephemeral: true });
       return;

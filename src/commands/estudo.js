@@ -17,7 +17,7 @@ module.exports = {
     const subcommand = interaction.options.getSubcommand();
 
     if (subcommand === 'iniciar') {
-      const result = startStudySession();
+      const result = await startStudySession();
       if (!result.created) {
         await interaction.reply({ content: '📚 Já existe uma sessão de estudo aberta. Finalize antes de iniciar outra, panquequinha.', ephemeral: true });
         return;
@@ -26,7 +26,7 @@ module.exports = {
       return;
     }
 
-    const result = finishStudySession();
+    const result = await finishStudySession();
     if (!result) {
       await interaction.reply({ content: '📚 Não tem sessão de estudo aberta para finalizar.', ephemeral: true });
       return;

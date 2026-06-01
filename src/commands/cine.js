@@ -23,7 +23,7 @@ module.exports = {
     const kaikiRating = interaction.options.getNumber('nota_kaiki', true);
     const comment = interaction.options.getString('comentario', true);
 
-    addMovie(name, type, platform, triviaRating, kaikiRating, comment);
+    await addMovie(name, type, platform, triviaRating, kaikiRating, comment);
 
     await interaction.reply({ embeds: [momozinEmbed({
       title: '🎬 CineMomozin atualizado',
