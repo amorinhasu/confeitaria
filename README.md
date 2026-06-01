@@ -66,7 +66,8 @@ npm start
 
 ## Comandos disponíveis
 
-- `/painel` — envia o painel principal com botões.
+- `/painel` — envia o painel principal guiado com botões e ações por área.
+- `/manual` — abre o manual visual com categorias e exemplos de uso.
 - `/perfil` — mostra perfil do casal, apelidos, contador desde o dia 05, status e conquistas.
 - `/recado adicionar texto:` — salva uma mensagem.
 - `/recado sortear` — sorteia a frase do dia.
@@ -122,3 +123,10 @@ npm run emojis
 ```
 
 Depois copie os IDs retornados para `config/emojis.json`.
+
+
+## Painel guiado
+
+O fluxo principal do Momozin é pelo `/painel`: cada área abre botões de ação e, quando necessário, modais para preencher recados, memórias, filmes/séries, playlist e compra de mimos.
+
+Os embeds usam banners configurados em `config/assets.json` e emojis customizados configurados em `config/emojis.json`.

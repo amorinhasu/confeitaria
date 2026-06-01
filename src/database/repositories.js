@@ -25,9 +25,20 @@ async function getRandomLoveNote() {
   return db.get('SELECT * FROM love_notes ORDER BY RANDOM() LIMIT 1');
 }
 
+async function countLoveNotes() {
+  await db.ready;
+  const row = await db.get('SELECT COUNT(*) AS total FROM love_notes');
+  return row?.total ?? 0;
+}
+
 async function addMemory(title, description, date) {
   await db.ready;
   return db.run('INSERT INTO memories (title, description, memory_date) VALUES (?, ?, ?)', [title, description, date]);
+}
+
+async function listMemories(limit = 5) {
+  await db.ready;
+  return db.all('SELECT * FROM memories ORDER BY id DESC LIMIT ?', [limit]);
 }
 
 async function addMovie(name, type, platform, triviaRating, kaikiRating, comment) {
@@ -36,6 +47,25 @@ async function addMovie(name, type, platform, triviaRating, kaikiRating, comment
     INSERT INTO movies (name, type, platform, trivia_rating, kaiki_rating, comment)
     VALUES (?, ?, ?, ?, ?, ?)
   `, [name, type, platform, triviaRating, kaikiRating, comment]);
+}
+
+async function listMovies(limit = 5) {
+  await db.ready;
+  return db.all('SELECT * FROM movies ORDER BY id DESC LIMIT ?', [limit]);
+}
+
+async function getStudyStats() {
+  await db.ready;
+  const row = await db.get(`
+    SELECT
+      COUNT(*) AS sessions,
+      COALESCE(SUM(minutes), 0) AS minutes,
+      COALESCE(SUM(coins_awarded), 0) AS coins
+    FROM study_sessions
+    WHERE ended_at IS NOT NULL
+  `);
+  const open = await db.get('SELECT * FROM study_sessions WHERE ended_at IS NULL ORDER BY id DESC LIMIT 1');
+  return { sessions: row?.sessions ?? 0, minutes: row?.minutes ?? 0, coins: row?.coins ?? 0, open };
 }
 
 async function setPlaylist(link) {
@@ -111,13 +141,17 @@ module.exports = {
   getProfile,
   addLoveNote,
   getRandomLoveNote,
+  countLoveNotes,
   addMemory,
+  listMemories,
   addMovie,
+  listMovies,
   setPlaylist,
   getPlaylist,
   getCoins,
   addCoins,
   startStudySession,
   finishStudySession,
+  getStudyStats,
   buyGift,
 };

@@ -9,7 +9,9 @@ function getAssetPublicUrl(name) {
   const asset = getAssetConfig(name);
   const baseUrl = process.env[assetsConfig.base_url_env];
 
-  if (!asset || !baseUrl) return null;
+  if (!asset) return null;
+  if (asset.url) return asset.url;
+  if (!baseUrl) return null;
   return new URL(asset.file.replace(/^assets\//, ''), `${baseUrl.replace(/\/$/, '')}/`).toString();
 }
 
