@@ -1,0 +1,478 @@
+{
+  "available_server_emojis": [
+    {
+      "name": "skyky",
+      "id": "1510899707810021416",
+      "animated": false,
+      "tag": "<:skyky:1510899707810021416>"
+    },
+    {
+      "name": "melodyheart",
+      "id": "1510898878541463582",
+      "animated": false,
+      "tag": "<:melodyheart:1510898878541463582>"
+    },
+    {
+      "name": "images",
+      "id": "1510898750833557516",
+      "animated": false,
+      "tag": "<:images:1510898750833557516>"
+    },
+    {
+      "name": "addmusic",
+      "id": "1510898754486800424",
+      "animated": false,
+      "tag": "<:addmusic:1510898754486800424>"
+    },
+    {
+      "name": "share2",
+      "id": "1510898753245282385",
+      "animated": false,
+      "tag": "<:share2:1510898753245282385>"
+    },
+    {
+      "name": "bookcoffee",
+      "id": "1510897326573748294",
+      "animated": false,
+      "tag": "<:bookcoffee:1510897326573748294>"
+    },
+    {
+      "name": "happypudding",
+      "id": "1510898439112753223",
+      "animated": false,
+      "tag": "<:happypudding:1510898439112753223>"
+    },
+    {
+      "name": "cookieheart",
+      "id": "1510897307657437285",
+      "animated": false,
+      "tag": "<:cookieheart:1510897307657437285>"
+    },
+    {
+      "name": "heartsparkles",
+      "id": "1510899705293307904",
+      "animated": false,
+      "tag": "<:heartsparkles:1510899705293307904>"
+    },
+    {
+      "name": "coffee",
+      "id": "1510897328016326796",
+      "animated": false,
+      "tag": "<:coffee:1510897328016326796>"
+    },
+    {
+      "name": "cookie",
+      "id": "1510898429847539732",
+      "animated": false,
+      "tag": "<:cookie:1510898429847539732>"
+    },
+    {
+      "name": "cakecreamy",
+      "id": "1510898855514865825",
+      "animated": false,
+      "tag": "<:cakecreamy:1510898855514865825>"
+    },
+    {
+      "name": "strawberryfilledbiscuits",
+      "id": "1510898864817967215",
+      "animated": false,
+      "tag": "<:strawberryfilledbiscuits:1510898864817967215>"
+    },
+    {
+      "name": "groupchat",
+      "id": "1510898760065093725",
+      "animated": false,
+      "tag": "<:groupchat:1510898760065093725>"
+    },
+    {
+      "name": "pinkheart",
+      "id": "1510898893775306923",
+      "animated": false,
+      "tag": "<:pinkheart:1510898893775306923>"
+    },
+    {
+      "name": "pinkdonut",
+      "id": "1510897020041298101",
+      "animated": false,
+      "tag": "<:pinkdonut:1510897020041298101>"
+    },
+    {
+      "name": "catwoohoo",
+      "id": "1510898360687792168",
+      "animated": false,
+      "tag": "<:catwoohoo:1510898360687792168>"
+    },
+    {
+      "name": "catwhat",
+      "id": "1510898357067976714",
+      "animated": false,
+      "tag": "<:catwhat:1510898357067976714>"
+    },
+    {
+      "name": "cathuh",
+      "id": "1510898364508798997",
+      "animated": false,
+      "tag": "<:cathuh:1510898364508798997>"
+    },
+    {
+      "name": "catcrazy",
+      "id": "1510898355423936612",
+      "animated": false,
+      "tag": "<:catcrazy:1510898355423936612>"
+    },
+    {
+      "name": "pinkheartglow",
+      "id": "1510899743658737706",
+      "animated": false,
+      "tag": "<:pinkheartglow:1510899743658737706>"
+    },
+    {
+      "name": "snowheart",
+      "id": "1510899745445515355",
+      "animated": false,
+      "tag": "<:snowheart:1510899745445515355>"
+    },
+    {
+      "name": "thankyouheart",
+      "id": "1510899742786457691",
+      "animated": false,
+      "tag": "<:thankyouheart:1510899742786457691>"
+    },
+    {
+      "name": "goldheart",
+      "id": "1510899741477703712",
+      "animated": false,
+      "tag": "<:goldheart:1510899741477703712>"
+    },
+    {
+      "name": "galaxyheartpink",
+      "id": "1510899727154020552",
+      "animated": false,
+      "tag": "<:galaxyheartpink:1510899727154020552>"
+    },
+    {
+      "name": "purplemidnightheart",
+      "id": "1510899719218659389",
+      "animated": false,
+      "tag": "<:purplemidnightheart:1510899719218659389>"
+    },
+    {
+      "name": "midnightheart",
+      "id": "1510899716500754432",
+      "animated": false,
+      "tag": "<:midnightheart:1510899716500754432>"
+    },
+    {
+      "name": "skyheartdusk",
+      "id": "1510899709370437742",
+      "animated": false,
+      "tag": "<:skyheartdusk:1510899709370437742>"
+    },
+    {
+      "name": "image",
+      "id": "1510898779371470928",
+      "animated": false,
+      "tag": "<:image:1510898779371470928>"
+    },
+    {
+      "name": "read",
+      "id": "1510898770643259503",
+      "animated": false,
+      "tag": "<:read:1510898770643259503>"
+    },
+    {
+      "name": "latte",
+      "id": "1510897321745846293",
+      "animated": false,
+      "tag": "<:latte:1510897321745846293>"
+    },
+    {
+      "name": "cinnamonbun",
+      "id": "1510897329912283226",
+      "animated": false,
+      "tag": "<:cinnamonbun:1510897329912283226>"
+    },
+    {
+      "name": "pinkcupcake",
+      "id": "1510897335977381969",
+      "animated": false,
+      "tag": "<:pinkcupcake:1510897335977381969>"
+    }
+  ],
+  "manual": {
+    "home": {
+      "name": "heartsparkles",
+      "id": "1510899705293307904",
+      "animated": false,
+      "fallback": "✨"
+    },
+    "back": {
+      "name": "melodyheart",
+      "id": "1510898878541463582",
+      "animated": false,
+      "fallback": "🌸"
+    },
+    "start": {
+      "name": "heartsparkles",
+      "id": "1510899705293307904",
+      "animated": false,
+      "fallback": "✨"
+    },
+    "previous": {
+      "name": "heartsparkles",
+      "id": "1510899705293307904",
+      "animated": false,
+      "fallback": "◀️"
+    },
+    "next": {
+      "name": "melodyheart",
+      "id": "1510898878541463582",
+      "animated": false,
+      "fallback": "▶️"
+    },
+    "panel": {
+      "name": "melodyheart",
+      "id": "1510898878541463582",
+      "animated": false,
+      "fallback": "🌸"
+    }
+  },
+  "painel": {
+    "main": {
+      "name": "melodyheart",
+      "id": "1510898878541463582",
+      "animated": false,
+      "fallback": "🩷"
+    },
+    "recados": {
+      "name": "melodyheart",
+      "id": "1510898878541463582",
+      "animated": false,
+      "fallback": "💌"
+    },
+    "memorias": {
+      "name": "images",
+      "id": "1510898750833557516",
+      "animated": false,
+      "fallback": "📸"
+    },
+    "cine": {
+      "name": "addmusic",
+      "id": "1510898754486800424",
+      "animated": false,
+      "fallback": "🎬"
+    },
+    "playlist": {
+      "name": "share2",
+      "id": "1510898753245282385",
+      "animated": false,
+      "fallback": "🎵"
+    },
+    "estudos": {
+      "name": "bookcoffee",
+      "id": "1510897326573748294",
+      "animated": false,
+      "fallback": "☕"
+    },
+    "mimos": {
+      "name": "happypudding",
+      "id": "1510898439112753223",
+      "animated": false,
+      "fallback": "🍮"
+    },
+    "perfil": {
+      "name": "cookieheart",
+      "id": "1510897307657437285",
+      "animated": false,
+      "fallback": "🩷"
+    },
+    "manual": {
+      "name": "heartsparkles",
+      "id": "1510899705293307904",
+      "animated": false,
+      "fallback": "✨"
+    }
+  },
+  "perfil": {
+    "heart": {
+      "name": "cookieheart",
+      "id": "1510897307657437285",
+      "animated": false,
+      "fallback": "🩷"
+    },
+    "couple": {
+      "name": "pinkheart",
+      "id": "1510898893775306923",
+      "animated": false,
+      "fallback": "💕"
+    },
+    "achievement": {
+      "name": "melodyheart",
+      "id": "1510898878541463582",
+      "animated": false,
+      "fallback": "✨"
+    }
+  },
+  "recados": {
+    "letter": {
+      "name": "melodyheart",
+      "id": "1510898878541463582",
+      "animated": false,
+      "fallback": "💌"
+    }
+  },
+  "memorias": {
+    "photo": {
+      "name": "images",
+      "id": "1510898750833557516",
+      "animated": false,
+      "fallback": "📸"
+    }
+  },
+  "cine": {
+    "movie": {
+      "name": "addmusic",
+      "id": "1510898754486800424",
+      "animated": false,
+      "fallback": "🎬"
+    }
+  },
+  "playlist": {
+    "music": {
+      "name": "share2",
+      "id": "1510898753245282385",
+      "animated": false,
+      "fallback": "🎵"
+    }
+  },
+  "estudos": {
+    "book": {
+      "name": "bookcoffee",
+      "id": "1510897326573748294",
+      "animated": false,
+      "fallback": "📚"
+    },
+    "coffee": {
+      "name": "coffee",
+      "id": "1510897328016326796",
+      "animated": false,
+      "fallback": "☕"
+    }
+  },
+  "momocoins": {
+    "coin": {
+      "name": "cookie",
+      "id": "1510898429847539732",
+      "animated": false,
+      "fallback": "🍪"
+    }
+  },
+  "mimos": {
+    "gift": {
+      "name": "cakecreamy",
+      "id": "1510898855514865825",
+      "animated": false,
+      "fallback": "🍰"
+    },
+    "pancake": {
+      "name": "strawberryfilledbiscuits",
+      "id": "1510898864817967215",
+      "animated": false,
+      "fallback": "🍪"
+    },
+    "pudding": {
+      "name": "happypudding",
+      "id": "1510898439112753223",
+      "animated": false,
+      "fallback": "🍮"
+    },
+    "letter": {
+      "name": "melodyheart",
+      "id": "1510898878541463582",
+      "animated": false,
+      "fallback": "💌"
+    },
+    "movie": {
+      "name": "images",
+      "id": "1510898750833557516",
+      "animated": false,
+      "fallback": "🎬"
+    },
+    "roblox": {
+      "name": "groupchat",
+      "id": "1510898760065093725",
+      "animated": false,
+      "fallback": "🎮"
+    },
+    "care": {
+      "name": "pinkheart",
+      "id": "1510898893775306923",
+      "animated": false,
+      "fallback": "💕"
+    },
+    "cookie": {
+      "name": "cookie",
+      "id": "1510898429847539732",
+      "animated": false,
+      "fallback": "🍪"
+    },
+    "coffee": {
+      "name": "coffee",
+      "id": "1510897328016326796",
+      "animated": false,
+      "fallback": "☕"
+    },
+    "donut": {
+      "name": "pinkdonut",
+      "id": "1510897020041298101",
+      "animated": false,
+      "fallback": "🍩"
+    }
+  },
+  "feedback": {
+    "success": {
+      "name": "pinkheart",
+      "id": "1510898893775306923",
+      "animated": false,
+      "fallback": "🩷"
+    },
+    "error": {
+      "name": "cathuh",
+      "id": "1510898364508798997",
+      "animated": false,
+      "fallback": "😿"
+    },
+    "warning": {
+      "name": "cathuh",
+      "id": "1510898364508798997",
+      "animated": false,
+      "fallback": "⚠️"
+    }
+  },
+  "reações": {
+    "love": {
+      "name": "pinkheart",
+      "id": "1510898893775306923",
+      "animated": false,
+      "fallback": "🩷"
+    },
+    "laugh": {
+      "name": "catcrazy",
+      "id": "1510898355423936612",
+      "animated": false,
+      "fallback": "😂"
+    },
+    "sleepy": {
+      "name": "skyky",
+      "id": "1510899707810021416",
+      "animated": false,
+      "fallback": "😴"
+    },
+    "confused": {
+      "name": "cathuh",
+      "id": "1510898364508798997",
+      "animated": false,
+      "fallback": "😿"
+    }
+  }
+}
