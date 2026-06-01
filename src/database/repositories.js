@@ -1,13 +1,26 @@
 const db = require('./db');
 const { withEmoji } = require('../utils/emojis');
 
+function createGift(key, emojiKey, labelText, cost, description) {
+  return {
+    key,
+    emojiKey,
+    labelText,
+    cost,
+    description,
+    get label() {
+      return withEmoji('mimos', emojiKey, labelText);
+    },
+  };
+}
+
 const giftsCatalog = [
-  { key: 'panquequinha', label: withEmoji('mimos', 'pancake', 'Panquequinha'), cost: 15, description: 'Um mimo fofinho de panquequinha.' },
-  { key: 'pudinzinho', label: withEmoji('mimos', 'pudding', 'Pudinzinho'), cost: 15, description: 'Pudinzinho para adoçar a call.' },
-  { key: 'cartinha', label: withEmoji('mimos', 'letter', 'Cartinha'), cost: 25, description: 'Uma cartinha feita com carinho.' },
-  { key: 'vale_filme', label: withEmoji('mimos', 'movie', 'Vale filme'), cost: 35, description: 'Kaiki escolhe um filme/série da vez.' },
-  { key: 'vale_roblox', label: withEmoji('mimos', 'roblox', 'Vale Roblox'), cost: 40, description: 'Uma gameplay de Roblox garantida.' },
-  { key: 'vale_carinho', label: withEmoji('mimos', 'care', 'Vale carinho'), cost: 50, description: 'Vale carinho ilimitado e risadinhas.' },
+  createGift('panquequinha', 'pancake', 'Panquequinha', 15, 'Um mimo fofinho de panquequinha.'),
+  createGift('pudinzinho', 'pudding', 'Pudinzinho', 15, 'Pudinzinho para adoçar a call.'),
+  createGift('cartinha', 'letter', 'Cartinha', 25, 'Uma cartinha feita com carinho.'),
+  createGift('vale_filme', 'movie', 'Vale filme', 35, 'Kaiki escolhe um filme/série da vez.'),
+  createGift('vale_roblox', 'roblox', 'Vale Roblox', 40, 'Uma gameplay de Roblox garantida.'),
+  createGift('vale_carinho', 'care', 'Vale carinho', 50, 'Vale carinho ilimitado e risadinhas.'),
 ];
 
 async function getCoupleSetup() {
@@ -46,6 +59,24 @@ async function getRandomLoveNote() {
 async function countLoveNotes() {
   await db.ready;
   const row = await db.get('SELECT COUNT(*) AS total FROM love_notes');
+  return row?.total ?? 0;
+}
+
+async function countMemories() {
+  await db.ready;
+  const row = await db.get('SELECT COUNT(*) AS total FROM memories');
+  return row?.total ?? 0;
+}
+
+async function countMovies() {
+  await db.ready;
+  const row = await db.get('SELECT COUNT(*) AS total FROM movies');
+  return row?.total ?? 0;
+}
+
+async function countGifts() {
+  await db.ready;
+  const row = await db.get('SELECT COUNT(*) AS total FROM gifts');
   return row?.total ?? 0;
 }
 
@@ -180,6 +211,9 @@ module.exports = {
   addLoveNote,
   getRandomLoveNote,
   countLoveNotes,
+  countMemories,
+  countMovies,
+  countGifts,
   addMemory,
   listMemories,
   addMovie,

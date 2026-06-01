@@ -204,27 +204,45 @@
       "name": "heartsparkles",
       "id": "1510899705293307904",
       "animated": false,
-      "fallback": "📖"
+      "fallback": "✨"
     },
     "back": {
-      "name": "skyky",
-      "id": "1510899707810021416",
+      "name": "melodyheart",
+      "id": "1510898878541463582",
       "animated": false,
-      "fallback": "⬅️"
+      "fallback": "🌸"
     },
     "start": {
-      "name": "skyky",
-      "id": "1510899707810021416",
+      "name": "heartsparkles",
+      "id": "1510899705293307904",
       "animated": false,
-      "fallback": "🏠"
+      "fallback": "✨"
+    },
+    "previous": {
+      "name": "heartsparkles",
+      "id": "1510899705293307904",
+      "animated": false,
+      "fallback": "◀️"
+    },
+    "next": {
+      "name": "melodyheart",
+      "id": "1510898878541463582",
+      "animated": false,
+      "fallback": "▶️"
+    },
+    "panel": {
+      "name": "melodyheart",
+      "id": "1510898878541463582",
+      "animated": false,
+      "fallback": "🌸"
     }
   },
   "painel": {
     "main": {
-      "name": "skyky",
-      "id": "1510899707810021416",
+      "name": "melodyheart",
+      "id": "1510898878541463582",
       "animated": false,
-      "fallback": "💙"
+      "fallback": "🌷"
     },
     "recados": {
       "name": "melodyheart",
@@ -248,31 +266,31 @@
       "name": "share2",
       "id": "1510898753245282385",
       "animated": false,
-      "fallback": "🎧"
+      "fallback": "🎵"
     },
     "estudos": {
       "name": "bookcoffee",
       "id": "1510897326573748294",
       "animated": false,
-      "fallback": "📚"
+      "fallback": "☕"
     },
     "mimos": {
       "name": "happypudding",
       "id": "1510898439112753223",
       "animated": false,
-      "fallback": "🎁"
+      "fallback": "🍮"
     },
     "perfil": {
       "name": "cookieheart",
       "id": "1510897307657437285",
       "animated": false,
-      "fallback": "💙"
+      "fallback": "🩷"
     },
     "manual": {
       "name": "heartsparkles",
       "id": "1510899705293307904",
       "animated": false,
-      "fallback": "📖"
+      "fallback": "✨"
     }
   },
   "perfil": {
@@ -280,19 +298,19 @@
       "name": "cookieheart",
       "id": "1510897307657437285",
       "animated": false,
-      "fallback": "💙"
+      "fallback": "🩷"
     },
     "couple": {
-      "name": "skyky",
-      "id": "1510899707810021416",
+      "name": "pinkheart",
+      "id": "1510898893775306923",
       "animated": false,
-      "fallback": "✨"
+      "fallback": "💕"
     },
     "achievement": {
-      "name": "heartsparkles",
-      "id": "1510899705293307904",
+      "name": "melodyheart",
+      "id": "1510898878541463582",
       "animated": false,
-      "fallback": "🏆"
+      "fallback": "✨"
     }
   },
   "recados": {
@@ -324,7 +342,7 @@
       "name": "share2",
       "id": "1510898753245282385",
       "animated": false,
-      "fallback": "🎧"
+      "fallback": "🎵"
     }
   },
   "estudos": {
@@ -346,7 +364,7 @@
       "name": "cookie",
       "id": "1510898429847539732",
       "animated": false,
-      "fallback": "🪙"
+      "fallback": "🍪"
     }
   },
   "mimos": {
@@ -354,13 +372,13 @@
       "name": "cakecreamy",
       "id": "1510898855514865825",
       "animated": false,
-      "fallback": "🎁"
+      "fallback": "🍰"
     },
     "pancake": {
       "name": "strawberryfilledbiscuits",
       "id": "1510898864817967215",
       "animated": false,
-      "fallback": "🥞"
+      "fallback": "🍪"
     },
     "pudding": {
       "name": "happypudding",
@@ -390,7 +408,7 @@
       "name": "pinkheart",
       "id": "1510898893775306923",
       "animated": false,
-      "fallback": "💙"
+      "fallback": "💕"
     },
     "cookie": {
       "name": "cookie",
@@ -413,16 +431,16 @@
   },
   "feedback": {
     "success": {
-      "name": "catwoohoo",
-      "id": "1510898360687792168",
+      "name": "pinkheart",
+      "id": "1510898893775306923",
       "animated": false,
-      "fallback": "✅"
+      "fallback": "🩷"
     },
     "error": {
-      "name": "catwhat",
-      "id": "1510898357067976714",
+      "name": "cathuh",
+      "id": "1510898364508798997",
       "animated": false,
-      "fallback": "💙"
+      "fallback": "😿"
     },
     "warning": {
       "name": "cathuh",
@@ -436,7 +454,7 @@
       "name": "pinkheart",
       "id": "1510898893775306923",
       "animated": false,
-      "fallback": "💙"
+      "fallback": "🩷"
     },
     "laugh": {
       "name": "catcrazy",
@@ -454,7 +472,7 @@
       "name": "cathuh",
       "id": "1510898364508798997",
       "animated": false,
-      "fallback": "😕"
+      "fallback": "😿"
     }
   }
 }

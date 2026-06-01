@@ -17,7 +17,7 @@ module.exports = {
       .setDescription('Compra um mimo usando MomoCoins.')
       .addStringOption((option) => {
         option.setName('item').setDescription('Item da loja.').setRequired(true);
-        giftsCatalog.forEach((gift) => option.addChoices({ name: `${gift.label} (${gift.cost})`, value: gift.key }));
+        giftsCatalog.forEach((gift) => option.addChoices({ name: `${gift.labelText} (${gift.cost})`, value: gift.key }));
         return option;
       })),
   async execute(interaction) {

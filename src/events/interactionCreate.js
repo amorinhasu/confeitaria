@@ -1,5 +1,6 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { createManualCategoryEmbed, createManualHomeEmbed, createManualHomeRows, createManualNavigationRows } = require('../components/manual');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
+const { createManualHomeEmbed, createManualHomeRows, createManualPageEmbed, createManualPageRows, getManualPage } = require('../components/manual');
+const { createAdminEmbed, createAdminRows } = require('../components/admin');
 const { createAreaEmbed, createAreaRows, createPanelEmbed, createPanelRows } = require('../components/panel');
 const { createGiftModal, createLoveNoteModal, createMemoryModal, createMovieModal, createPlaylistModal } = require('../components/modals');
 const {
@@ -45,7 +46,7 @@ function giftButtons() {
       .setCustomId(`gift:buy:${gift.key}`)
       .setLabel(`${gift.cost} moedas`)
       .setStyle(ButtonStyle.Secondary);
-    const emojiValue = buttonEmoji('mimos', gift.key === 'panquequinha' ? 'pancake' : gift.key === 'pudinzinho' ? 'pudding' : gift.key === 'vale_roblox' ? 'roblox' : gift.key === 'vale_carinho' ? 'care' : gift.key === 'vale_filme' ? 'movie' : 'letter');
+    const emojiValue = buttonEmoji('mimos', gift.emojiKey || 'gift');
     if (emojiValue) button.setEmoji(emojiValue);
     return button;
   });
@@ -195,18 +196,27 @@ async function handlePanelButton(interaction) {
 }
 
 async function handleManualButton(interaction) {
-  const categoryId = interaction.customId.split(':')[1];
-  if (categoryId === 'home' || categoryId === 'back') {
-    await interaction.update({ embeds: [createManualHomeEmbed()], components: createManualHomeRows() });
+  const [, type, pageId] = interaction.customId.split(':');
+  const targetPage = type === 'page' ? pageId : type === 'back' ? 'home' : type;
+  const page = getManualPage(targetPage);
+
+  if (!page) {
+    await interaction.reply({ content: withEmoji('feedback', 'warning', 'Página do manual não encontrada.'), ephemeral: true });
     return;
   }
-  const embed = createManualCategoryEmbed(categoryId);
-  if (!embed) {
-    await interaction.reply({ content: withEmoji('feedback', 'warning', 'Categoria do manual não encontrada.'), ephemeral: true });
+
+  console.log(`Página do manual aberta: ${page.id}`);
+  await interaction.update({ embeds: [createManualPageEmbed(page.id)], components: createManualPageRows(page.id) });
+}
+
+async function handleAdminButton(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({ content: withEmoji('feedback', 'warning', 'Apenas administradores podem usar esse painel.'), ephemeral: true });
     return;
   }
-  console.log(`Categoria do manual aberta: ${categoryId}`);
-  await interaction.update({ embeds: [embed], components: createManualNavigationRows() });
+
+  const tab = interaction.customId.split(':')[1] || 'sistema';
+  await interaction.update({ embeds: [await createAdminEmbed(tab)], components: createAdminRows(tab === 'diagnostico' ? 'sistema' : tab) });
 }
 
 async function handleGiftButton(interaction) {
@@ -295,7 +305,7 @@ module.exports = {
 
       let cancelDefer = () => {};
       try {
-        if (!(await ensureAuthorized(interaction))) return;
+        if (commandName !== 'admin' && !(await ensureAuthorized(interaction))) return;
         cancelDefer = scheduleDefer(interaction, commandName);
         await command.execute(interaction);
         cancelDefer();
@@ -309,6 +319,7 @@ module.exports = {
     }
 
     try {
+      if (interaction.isButton() && interaction.customId.startsWith('admin:')) return await handleAdminButton(interaction);
       if ((interaction.isButton() || interaction.isModalSubmit()) && !(await ensureAuthorized(interaction))) return;
       if (interaction.isButton() && interaction.customId.startsWith('panel:')) return await handlePanelButton(interaction);
       if (interaction.isButton() && interaction.customId.startsWith('manual:')) return await handleManualButton(interaction);
