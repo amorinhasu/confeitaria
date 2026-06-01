@@ -18,7 +18,11 @@ async function deploy() {
   console.log('Slash commands do Momozin registrados com sucesso.');
 }
 
-deploy().catch((error) => {
-  console.error('Falha ao registrar slash commands:', error);
-  process.exit(1);
-});
+if (require.main === module) {
+  deploy().catch((error) => {
+    console.error('Falha ao registrar slash commands:', error);
+    process.exit(1);
+  });
+}
+
+module.exports = { deploy };

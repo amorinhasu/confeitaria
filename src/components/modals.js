@@ -29,9 +29,10 @@ function createMovieModal() {
     .setTitle('Adicionar CineMomozin')
     .addComponents(
       input('name', 'Nome', TextInputStyle.Short, true, 'Filme ou série'),
+      input('type', 'Tipo', TextInputStyle.Short, true, 'Filme, série, anime...'),
       input('platform', 'Plataforma', TextInputStyle.Short, true, 'Netflix, Discord, cinema...'),
-      input('ratings', 'Notas', TextInputStyle.Short, true, 'Trívia 10 / Kaiki 10'),
-      input('comment', 'Comentário', TextInputStyle.Paragraph, true, 'O veredito do casal'),
+      input('triviaRating', 'Nota da Trívia', TextInputStyle.Short, true, '0 a 10'),
+      input('kaikiRating', 'Nota do Kaiki', TextInputStyle.Short, true, '0 a 10'),
     );
 }
 

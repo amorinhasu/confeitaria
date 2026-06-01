@@ -41,3 +41,10 @@ Depois copie os IDs retornados para `config/emojis.json`.
 ```
 
 Com `id` preenchido, o helper troca o fallback por `<:momozin_azul:123456789012345678>` automaticamente.
+
+
+## Mapeamento visual final
+
+O mapeamento atual prioriza estética de confeitaria, madrugada e casal: `cookieheart` para perfil, `melodyheart` para recados, `bookcoffee` para estudos, `happypudding`/`cakecreamy` para mimos e `skyky`/`heartsparkles` para navegação e painel.
+
+Todos os emojis configurados atualmente têm IDs reais e `animated: false`.

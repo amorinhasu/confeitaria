@@ -34,7 +34,7 @@ const panelAreas = {
     description: 'Trívia + Kaiki: apelidos, status, conquistas e contador desde o dia 05.',
   },
   manual: {
-    emojiCategory: 'manual', emojiKey: 'home', label: 'Manual', title: 'Manual do Momozin', image: 'manual_home_banner',
+    emojiCategory: 'painel', emojiKey: 'manual', label: 'Manual', title: 'Manual do Momozin', image: 'manual_home_banner',
     description: 'Um guia visual para usar tudo sem decorar comandos.',
   },
 };

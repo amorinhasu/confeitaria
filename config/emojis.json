@@ -1,6 +1,126 @@
 {
   "available_server_emojis": [
     {
+      "name": "skyky",
+      "id": "1510899707810021416",
+      "animated": false,
+      "tag": "<:skyky:1510899707810021416>"
+    },
+    {
+      "name": "melodyheart",
+      "id": "1510898878541463582",
+      "animated": false,
+      "tag": "<:melodyheart:1510898878541463582>"
+    },
+    {
+      "name": "images",
+      "id": "1510898750833557516",
+      "animated": false,
+      "tag": "<:images:1510898750833557516>"
+    },
+    {
+      "name": "addmusic",
+      "id": "1510898754486800424",
+      "animated": false,
+      "tag": "<:addmusic:1510898754486800424>"
+    },
+    {
+      "name": "share2",
+      "id": "1510898753245282385",
+      "animated": false,
+      "tag": "<:share2:1510898753245282385>"
+    },
+    {
+      "name": "bookcoffee",
+      "id": "1510897326573748294",
+      "animated": false,
+      "tag": "<:bookcoffee:1510897326573748294>"
+    },
+    {
+      "name": "happypudding",
+      "id": "1510898439112753223",
+      "animated": false,
+      "tag": "<:happypudding:1510898439112753223>"
+    },
+    {
+      "name": "cookieheart",
+      "id": "1510897307657437285",
+      "animated": false,
+      "tag": "<:cookieheart:1510897307657437285>"
+    },
+    {
+      "name": "heartsparkles",
+      "id": "1510899705293307904",
+      "animated": false,
+      "tag": "<:heartsparkles:1510899705293307904>"
+    },
+    {
+      "name": "coffee",
+      "id": "1510897328016326796",
+      "animated": false,
+      "tag": "<:coffee:1510897328016326796>"
+    },
+    {
+      "name": "cookie",
+      "id": "1510898429847539732",
+      "animated": false,
+      "tag": "<:cookie:1510898429847539732>"
+    },
+    {
+      "name": "cakecreamy",
+      "id": "1510898855514865825",
+      "animated": false,
+      "tag": "<:cakecreamy:1510898855514865825>"
+    },
+    {
+      "name": "strawberryfilledbiscuits",
+      "id": "1510898864817967215",
+      "animated": false,
+      "tag": "<:strawberryfilledbiscuits:1510898864817967215>"
+    },
+    {
+      "name": "groupchat",
+      "id": "1510898760065093725",
+      "animated": false,
+      "tag": "<:groupchat:1510898760065093725>"
+    },
+    {
+      "name": "pinkheart",
+      "id": "1510898893775306923",
+      "animated": false,
+      "tag": "<:pinkheart:1510898893775306923>"
+    },
+    {
+      "name": "pinkdonut",
+      "id": "1510897020041298101",
+      "animated": false,
+      "tag": "<:pinkdonut:1510897020041298101>"
+    },
+    {
+      "name": "catwoohoo",
+      "id": "1510898360687792168",
+      "animated": false,
+      "tag": "<:catwoohoo:1510898360687792168>"
+    },
+    {
+      "name": "catwhat",
+      "id": "1510898357067976714",
+      "animated": false,
+      "tag": "<:catwhat:1510898357067976714>"
+    },
+    {
+      "name": "cathuh",
+      "id": "1510898364508798997",
+      "animated": false,
+      "tag": "<:cathuh:1510898364508798997>"
+    },
+    {
+      "name": "catcrazy",
+      "id": "1510898355423936612",
+      "animated": false,
+      "tag": "<:catcrazy:1510898355423936612>"
+    },
+    {
       "name": "pinkheartglow",
       "id": "1510899743658737706",
       "animated": false,
@@ -49,46 +169,10 @@
       "tag": "<:skyheartdusk:1510899709370437742>"
     },
     {
-      "name": "skyky",
-      "id": "1510899707810021416",
-      "animated": false,
-      "tag": "<:skyky:1510899707810021416>"
-    },
-    {
-      "name": "heartsparkles",
-      "id": "1510899705293307904",
-      "animated": false,
-      "tag": "<:heartsparkles:1510899705293307904>"
-    },
-    {
-      "name": "pinkheart",
-      "id": "1510899691330605188",
-      "animated": false,
-      "tag": "<:pinkheart:1510899691330605188>"
-    },
-    {
       "name": "image",
       "id": "1510898779371470928",
       "animated": false,
       "tag": "<:image:1510898779371470928>"
-    },
-    {
-      "name": "images",
-      "id": "1510898750833557516",
-      "animated": false,
-      "tag": "<:images:1510898750833557516>"
-    },
-    {
-      "name": "addmusic",
-      "id": "1510898754486800424",
-      "animated": false,
-      "tag": "<:addmusic:1510898754486800424>"
-    },
-    {
-      "name": "share2",
-      "id": "1510898753245282385",
-      "animated": false,
-      "tag": "<:share2:1510898753245282385>"
     },
     {
       "name": "read",
@@ -97,34 +181,10 @@
       "tag": "<:read:1510898770643259503>"
     },
     {
-      "name": "coffee",
-      "id": "1510897328016326796",
-      "animated": false,
-      "tag": "<:coffee:1510897328016326796>"
-    },
-    {
-      "name": "bookcoffee",
-      "id": "1510897326573748294",
-      "animated": false,
-      "tag": "<:bookcoffee:1510897326573748294>"
-    },
-    {
       "name": "latte",
       "id": "1510897321745846293",
       "animated": false,
       "tag": "<:latte:1510897321745846293>"
-    },
-    {
-      "name": "happypudding",
-      "id": "1510898439112753223",
-      "animated": false,
-      "tag": "<:happypudding:1510898439112753223>"
-    },
-    {
-      "name": "cookie",
-      "id": "1510898429847539732",
-      "animated": false,
-      "tag": "<:cookie:1510898429847539732>"
     },
     {
       "name": "cinnamonbun",
@@ -137,48 +197,24 @@
       "id": "1510897335977381969",
       "animated": false,
       "tag": "<:pinkcupcake:1510897335977381969>"
-    },
-    {
-      "name": "catcrazy",
-      "id": "1510898355423936612",
-      "animated": false,
-      "tag": "<:catcrazy:1510898355423936612>"
-    },
-    {
-      "name": "cathuh",
-      "id": "1510898351648804914",
-      "animated": false,
-      "tag": "<:cathuh:1510898351648804914>"
-    },
-    {
-      "name": "catwoohoo",
-      "id": "1510898360687792168",
-      "animated": false,
-      "tag": "<:catwoohoo:1510898360687792168>"
-    },
-    {
-      "name": "catwhat",
-      "id": "1510898357067976714",
-      "animated": false,
-      "tag": "<:catwhat:1510898357067976714>"
     }
   ],
   "manual": {
     "home": {
-      "name": "skyky",
-      "id": "1510899707810021416",
+      "name": "heartsparkles",
+      "id": "1510899705293307904",
       "animated": false,
       "fallback": "📖"
     },
     "back": {
-      "name": "skyheartdusk",
-      "id": "1510899709370437742",
+      "name": "skyky",
+      "id": "1510899707810021416",
       "animated": false,
       "fallback": "⬅️"
     },
     "start": {
-      "name": "snowheart",
-      "id": "1510899745445515355",
+      "name": "skyky",
+      "id": "1510899707810021416",
       "animated": false,
       "fallback": "🏠"
     }
@@ -191,32 +227,32 @@
       "fallback": "💙"
     },
     "recados": {
-      "name": "heartsparkles",
-      "id": "1510899705293307904",
+      "name": "melodyheart",
+      "id": "1510898878541463582",
       "animated": false,
       "fallback": "💌"
     },
     "memorias": {
-      "name": "image",
-      "id": "1510898779371470928",
+      "name": "images",
+      "id": "1510898750833557516",
       "animated": false,
       "fallback": "📸"
     },
     "cine": {
-      "name": "images",
-      "id": "1510898750833557516",
+      "name": "addmusic",
+      "id": "1510898754486800424",
       "animated": false,
       "fallback": "🎬"
     },
     "playlist": {
-      "name": "addmusic",
-      "id": "1510898754486800424",
+      "name": "share2",
+      "id": "1510898753245282385",
       "animated": false,
       "fallback": "🎧"
     },
     "estudos": {
-      "name": "read",
-      "id": "1510898770643259503",
+      "name": "bookcoffee",
+      "id": "1510897326573748294",
       "animated": false,
       "fallback": "📚"
     },
@@ -227,90 +263,102 @@
       "fallback": "🎁"
     },
     "perfil": {
-      "name": "pinkheartglow",
-      "id": "1510899743658737706",
+      "name": "cookieheart",
+      "id": "1510897307657437285",
       "animated": false,
       "fallback": "💙"
+    },
+    "manual": {
+      "name": "heartsparkles",
+      "id": "1510899705293307904",
+      "animated": false,
+      "fallback": "📖"
     }
   },
   "perfil": {
     "heart": {
-      "name": "pinkheartglow",
-      "id": "1510899743658737706",
+      "name": "cookieheart",
+      "id": "1510897307657437285",
       "animated": false,
       "fallback": "💙"
     },
     "couple": {
-      "name": "snowheart",
-      "id": "1510899745445515355",
+      "name": "skyky",
+      "id": "1510899707810021416",
       "animated": false,
       "fallback": "✨"
     },
     "achievement": {
-      "name": "goldheart",
-      "id": "1510899741477703712",
+      "name": "heartsparkles",
+      "id": "1510899705293307904",
       "animated": false,
       "fallback": "🏆"
     }
   },
   "recados": {
     "letter": {
-      "name": "heartsparkles",
-      "id": "1510899705293307904",
+      "name": "melodyheart",
+      "id": "1510898878541463582",
       "animated": false,
       "fallback": "💌"
     }
   },
   "memorias": {
     "photo": {
-      "name": "image",
-      "id": "1510898779371470928",
+      "name": "images",
+      "id": "1510898750833557516",
       "animated": false,
       "fallback": "📸"
     }
   },
   "cine": {
     "movie": {
-      "name": "images",
-      "id": "1510898750833557516",
+      "name": "addmusic",
+      "id": "1510898754486800424",
       "animated": false,
       "fallback": "🎬"
     }
   },
   "playlist": {
     "music": {
-      "name": "addmusic",
-      "id": "1510898754486800424",
+      "name": "share2",
+      "id": "1510898753245282385",
       "animated": false,
       "fallback": "🎧"
     }
   },
   "estudos": {
     "book": {
-      "name": "read",
-      "id": "1510898770643259503",
+      "name": "bookcoffee",
+      "id": "1510897326573748294",
       "animated": false,
       "fallback": "📚"
+    },
+    "coffee": {
+      "name": "coffee",
+      "id": "1510897328016326796",
+      "animated": false,
+      "fallback": "☕"
     }
   },
   "momocoins": {
     "coin": {
-      "name": "goldheart",
-      "id": "1510899741477703712",
+      "name": "cookie",
+      "id": "1510898429847539732",
       "animated": false,
       "fallback": "🪙"
     }
   },
   "mimos": {
     "gift": {
-      "name": "pinkcupcake",
-      "id": "1510897335977381969",
+      "name": "cakecreamy",
+      "id": "1510898855514865825",
       "animated": false,
       "fallback": "🎁"
     },
     "pancake": {
-      "name": "cinnamonbun",
-      "id": "1510897329912283226",
+      "name": "strawberryfilledbiscuits",
+      "id": "1510898864817967215",
       "animated": false,
       "fallback": "🥞"
     },
@@ -321,8 +369,8 @@
       "fallback": "🍮"
     },
     "letter": {
-      "name": "heartsparkles",
-      "id": "1510899705293307904",
+      "name": "melodyheart",
+      "id": "1510898878541463582",
       "animated": false,
       "fallback": "💌"
     },
@@ -333,16 +381,34 @@
       "fallback": "🎬"
     },
     "roblox": {
-      "name": "skyky",
-      "id": "1510899707810021416",
+      "name": "groupchat",
+      "id": "1510898760065093725",
       "animated": false,
       "fallback": "🎮"
     },
     "care": {
-      "name": "pinkheartglow",
-      "id": "1510899743658737706",
+      "name": "pinkheart",
+      "id": "1510898893775306923",
       "animated": false,
       "fallback": "💙"
+    },
+    "cookie": {
+      "name": "cookie",
+      "id": "1510898429847539732",
+      "animated": false,
+      "fallback": "🍪"
+    },
+    "coffee": {
+      "name": "coffee",
+      "id": "1510897328016326796",
+      "animated": false,
+      "fallback": "☕"
+    },
+    "donut": {
+      "name": "pinkdonut",
+      "id": "1510897020041298101",
+      "animated": false,
+      "fallback": "🍩"
     }
   },
   "feedback": {
@@ -360,15 +426,15 @@
     },
     "warning": {
       "name": "cathuh",
-      "id": "1510898351648804914",
+      "id": "1510898364508798997",
       "animated": false,
       "fallback": "⚠️"
     }
   },
   "reações": {
     "love": {
-      "name": "pinkheartglow",
-      "id": "1510899743658737706",
+      "name": "pinkheart",
+      "id": "1510898893775306923",
       "animated": false,
       "fallback": "💙"
     },
@@ -379,10 +445,16 @@
       "fallback": "😂"
     },
     "sleepy": {
-      "name": "purplemidnightheart",
-      "id": "1510899719218659389",
+      "name": "skyky",
+      "id": "1510899707810021416",
       "animated": false,
       "fallback": "😴"
+    },
+    "confused": {
+      "name": "cathuh",
+      "id": "1510898364508798997",
+      "animated": false,
+      "fallback": "😕"
     }
   }
 }

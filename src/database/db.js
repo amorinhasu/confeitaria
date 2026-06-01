@@ -43,6 +43,24 @@ function all(sql, params = []) {
   });
 }
 
+async function transaction(callback) {
+  await ready;
+  await exec('BEGIN IMMEDIATE TRANSACTION');
+
+  try {
+    const result = await callback({ all, exec, get, run });
+    await exec('COMMIT');
+    return result;
+  } catch (error) {
+    try {
+      await exec('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Erro ao desfazer transação SQLite:', rollbackError);
+    }
+    throw error;
+  }
+}
+
 async function migrate() {
   await exec(`
     PRAGMA foreign_keys = ON;
@@ -55,6 +73,14 @@ async function migrate() {
       start_date TEXT NOT NULL DEFAULT '2026-05-05',
       status TEXT NOT NULL DEFAULT 'Em call de madrugada, rindo baixo e se escolhendo todo dia',
       achievements TEXT NOT NULL DEFAULT 'Sobreviver a saudade; Maratonar juntinhos; Estudar sem surtar; Farmar MomoCoins'
+    );
+
+    CREATE TABLE IF NOT EXISTS couple_setup (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      trivia_id TEXT NOT NULL,
+      kaiki_id TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS love_notes (
@@ -94,6 +120,14 @@ async function migrate() {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS coin_transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      amount INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS gifts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       item TEXT NOT NULL,
@@ -116,4 +150,4 @@ async function migrate() {
 
 const ready = migrate();
 
-module.exports = { all, exec, get, ready, run };
+module.exports = { all, exec, get, ready, run, transaction };

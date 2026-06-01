@@ -10,6 +10,24 @@ const giftsCatalog = [
   { key: 'vale_carinho', label: withEmoji('mimos', 'care', 'Vale carinho'), cost: 50, description: 'Vale carinho ilimitado e risadinhas.' },
 ];
 
+async function getCoupleSetup() {
+  await db.ready;
+  return db.get('SELECT * FROM couple_setup WHERE id = 1');
+}
+
+async function saveCoupleSetup(triviaId, kaikiId) {
+  await db.ready;
+  await db.run(`
+    INSERT INTO couple_setup (id, trivia_id, kaiki_id, created_at, updated_at)
+    VALUES (1, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET
+      trivia_id = excluded.trivia_id,
+      kaiki_id = excluded.kaiki_id,
+      updated_at = CURRENT_TIMESTAMP
+  `, [triviaId, kaikiId]);
+  return getCoupleSetup();
+}
+
 async function getProfile() {
   await db.ready;
   return db.get('SELECT * FROM couple_profile WHERE id = 1');
@@ -87,17 +105,21 @@ async function getCoins() {
   return row?.balance ?? 0;
 }
 
-async function addCoins(quantity) {
+async function recordCoinTransaction(amount, type, reason) {
+  await db.ready;
+  return db.run('INSERT INTO coin_transactions (amount, type, reason) VALUES (?, ?, ?)', [amount, type, reason]);
+}
+
+async function addCoins(quantity, reason = 'Ajuste manual de MomoCoins', type = 'manual') {
   await db.ready;
   await db.run('UPDATE coins SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [quantity]);
+  await recordCoinTransaction(quantity, type, reason);
   return await getCoins();
 }
 
-async function spendCoins(quantity) {
-  const current = await getCoins();
-  if (current < quantity) return { ok: false, balance: current };
-  await db.run('UPDATE coins SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [quantity]);
-  return { ok: true, balance: await getCoins() };
+async function getRecentCoinTransactions(limit = 5) {
+  await db.ready;
+  return db.all('SELECT * FROM coin_transactions ORDER BY id DESC LIMIT ?', [limit]);
 }
 
 async function startStudySession() {
@@ -117,27 +139,43 @@ async function finishStudySession() {
   const minutes = Math.max(1, Math.floor((Date.now() - startedAt.getTime()) / 60000));
   const coinsAwarded = Math.max(1, Math.floor(minutes / 10));
 
-  await db.run(`
-    UPDATE study_sessions
-    SET ended_at = CURRENT_TIMESTAMP, minutes = ?, coins_awarded = ?
-    WHERE id = ?
-  `, [minutes, coinsAwarded, session.id]);
-  await addCoins(coinsAwarded);
+  return db.transaction(async (tx) => {
+    await tx.run(`
+      UPDATE study_sessions
+      SET ended_at = CURRENT_TIMESTAMP, minutes = ?, coins_awarded = ?
+      WHERE id = ?
+    `, [minutes, coinsAwarded, session.id]);
+    await tx.run('UPDATE coins SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [coinsAwarded]);
+    await tx.run('INSERT INTO coin_transactions (amount, type, reason) VALUES (?, ?, ?)', [coinsAwarded, 'study_reward', `Recompensa por ${minutes} minuto(s) de estudo`]);
 
-  return { ...session, minutes, coinsAwarded, balance: await getCoins() };
+    const balanceRow = await tx.get('SELECT balance FROM coins WHERE id = 1');
+    return { ...session, minutes, coinsAwarded, balance: balanceRow?.balance ?? 0 };
+  });
 }
 
 async function buyGift(key) {
+  await db.ready;
   const item = giftsCatalog.find((gift) => gift.key === key);
   if (!item) return { ok: false, reason: 'not_found' };
-  const purchase = await spendCoins(item.cost);
-  if (!purchase.ok) return { ok: false, reason: 'no_coins', item, balance: purchase.balance };
-  await db.run('INSERT INTO gifts (item, cost) VALUES (?, ?)', [item.label, item.cost]);
-  return { ok: true, item, balance: purchase.balance };
+
+  return db.transaction(async (tx) => {
+    const current = await tx.get('SELECT balance FROM coins WHERE id = 1');
+    const balance = current?.balance ?? 0;
+    if (balance < item.cost) return { ok: false, reason: 'no_coins', item, balance };
+
+    await tx.run('UPDATE coins SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [item.cost]);
+    await tx.run('INSERT INTO gifts (item, cost) VALUES (?, ?)', [item.label, item.cost]);
+    await tx.run('INSERT INTO coin_transactions (amount, type, reason) VALUES (?, ?, ?)', [-item.cost, 'gift_purchase', `Compra de mimo: ${item.key}`]);
+
+    const updated = await tx.get('SELECT balance FROM coins WHERE id = 1');
+    return { ok: true, item, balance: updated?.balance ?? 0 };
+  });
 }
 
 module.exports = {
   giftsCatalog,
+  getCoupleSetup,
+  saveCoupleSetup,
   getProfile,
   addLoveNote,
   getRandomLoveNote,
@@ -150,6 +188,8 @@ module.exports = {
   getPlaylist,
   getCoins,
   addCoins,
+  getRecentCoinTransactions,
+  recordCoinTransaction,
   startStudySession,
   finishStudySession,
   getStudyStats,

@@ -13,6 +13,7 @@ const {
   getPlaylist,
   getProfile,
   getRandomLoveNote,
+  getRecentCoinTransactions,
   getStudyStats,
   giftsCatalog,
   listMemories,
@@ -21,16 +22,21 @@ const {
   startStudySession,
 } = require('../database/repositories');
 const { getAssetPublicUrl } = require('../utils/assets');
+const { isAuthorizedCouple } = require('../utils/authorization');
+const { formatCoinTransactions } = require('../utils/coins');
 const { profileEmbed, studyStatsEmbed } = require('../utils/embeds');
 const { buttonEmoji, withEmoji } = require('../utils/emojis');
 const { respondEphemeral, scheduleDefer } = require('../utils/interactions');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
 
-function parseRating(text, label) {
-  const match = text.match(new RegExp(`${label}\\s*:?\\s*(\\d+(?:[,.]\\d+)?)`, 'i'));
-  if (!match) return 10;
-  return Math.min(10, Math.max(0, Number(match[1].replace(',', '.'))));
+function parseModalRating(value) {
+  const normalized = value.trim().replace(',', '.');
+  if (!/^\d+(?:\.\d+)?$/.test(normalized)) return null;
+
+  const rating = Number(normalized);
+  if (!Number.isFinite(rating) || rating < 0 || rating > 10) return null;
+  return rating;
 }
 
 function giftButtons() {
@@ -52,6 +58,17 @@ function giftButtons() {
 async function safeReply(interaction, payload, ephemeral = true) {
   if (interaction.deferred || interaction.replied) return interaction.followUp({ ...payload, ephemeral });
   return interaction.reply({ ...payload, ephemeral });
+}
+
+async function denyUnauthorized(interaction) {
+  await respondEphemeral(interaction, withEmoji('feedback', 'warning', 'Esse cantinho é reservado para a Trívia e o Kaiki. Se ainda não configurou, use `/setup casal`.'));
+}
+
+async function ensureAuthorized(interaction) {
+  const authorization = await isAuthorizedCouple(interaction);
+  if (authorization.ok) return true;
+  await denyUnauthorized(interaction);
+  return false;
 }
 
 async function handlePanelButton(interaction) {
@@ -161,7 +178,13 @@ async function handlePanelButton(interaction) {
 
   if ((areaId === 'mimos' && action === 'coins') || areaId === 'momocoins') {
     const balance = await getCoins();
-    await interaction.editReply({ embeds: [momozinEmbed({ title: withEmoji('momocoins', 'coin', 'Cofrinho Momozin'), description: `Saldo atual: **${balance} MomoCoins**.`, image: getAssetPublicUrl('coins_banner') })] });
+    const transactions = await getRecentCoinTransactions(5);
+    await interaction.editReply({ embeds: [momozinEmbed({
+      title: withEmoji('momocoins', 'coin', 'Cofrinho Momozin'),
+      description: `Saldo atual: **${balance} MomoCoins**.`,
+      image: getAssetPublicUrl('coins_banner'),
+      fields: [{ name: 'Últimas movimentações', value: formatCoinTransactions(transactions), inline: false }],
+    })] });
     return;
   }
 
@@ -218,10 +241,28 @@ async function handleModalSubmit(interaction) {
   }
 
   if (areaId === 'cine' && action === 'add') {
-    const ratings = interaction.fields.getTextInputValue('ratings');
     const name = interaction.fields.getTextInputValue('name');
-    await addMovie(name, 'filme/série', interaction.fields.getTextInputValue('platform'), parseRating(ratings, 'trívia'), parseRating(ratings, 'kaiki'), interaction.fields.getTextInputValue('comment'));
-    await interaction.editReply({ embeds: [momozinEmbed({ title: withEmoji('cine', 'movie', 'CineMomozin atualizado'), description: `${name} ${getText('cine_saved', 'entrou para a listinha azul do casal.')}`, image: getAssetPublicUrl('cine_banner') })] });
+    const type = interaction.fields.getTextInputValue('type');
+    const platform = interaction.fields.getTextInputValue('platform');
+    const triviaRating = parseModalRating(interaction.fields.getTextInputValue('triviaRating'));
+    const kaikiRating = parseModalRating(interaction.fields.getTextInputValue('kaikiRating'));
+
+    if (triviaRating === null || kaikiRating === null) {
+      await interaction.editReply(withEmoji('feedback', 'warning', 'As notas precisam ser números de 0 a 10. Exemplo: 8.5'));
+      return;
+    }
+
+    await addMovie(name, type, platform, triviaRating, kaikiRating, 'Registrado pelo painel do Momozin.');
+    await interaction.editReply({ embeds: [momozinEmbed({
+      title: withEmoji('cine', 'movie', 'CineMomozin atualizado'),
+      description: `${name} ${getText('cine_saved', 'entrou para a listinha azul do casal.')}`,
+      image: getAssetPublicUrl('cine_banner'),
+      fields: [
+        { name: 'Tipo', value: type, inline: true },
+        { name: 'Plataforma', value: platform, inline: true },
+        { name: 'Notas', value: `Trívia: ${triviaRating}/10\nKaiki: ${kaikiRating}/10`, inline: true },
+      ],
+    })] });
     return;
   }
 
@@ -251,8 +292,11 @@ module.exports = {
         await safeReply(interaction, { content: withEmoji('feedback', 'error', getText('unknown_command_error', 'Esse comando não foi encontrado no caderninho do Momozin.')) });
         return;
       }
-      const cancelDefer = scheduleDefer(interaction, commandName);
+
+      let cancelDefer = () => {};
       try {
+        if (!(await ensureAuthorized(interaction))) return;
+        cancelDefer = scheduleDefer(interaction, commandName);
         await command.execute(interaction);
         cancelDefer();
         console.log(`Comando executado com sucesso: ${commandName}`);
@@ -265,6 +309,7 @@ module.exports = {
     }
 
     try {
+      if ((interaction.isButton() || interaction.isModalSubmit()) && !(await ensureAuthorized(interaction))) return;
       if (interaction.isButton() && interaction.customId.startsWith('panel:')) return await handlePanelButton(interaction);
       if (interaction.isButton() && interaction.customId.startsWith('manual:')) return await handleManualButton(interaction);
       if (interaction.isButton() && interaction.customId.startsWith('gift:buy:')) return await handleGiftButton(interaction);
