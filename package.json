@@ -1,0 +1,28 @@
+{
+  "name": "momozin-discord-bot",
+  "version": "0.1.0",
+  "description": "Bot privado de casal Momozin para Discord com trivia, cine, estudos e mimos.",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "deploy": "node src/deploy-commands.js",
+    "start": "node src/index.js",
+    "start:auto-deploy": "AUTO_DEPLOY_COMMANDS=true node src/index.js",
+    "emojis": "node src/list-emojis.js",
+    "test:manual": "node scripts/check-manual-custom-ids.js"
+  },
+  "keywords": [
+    "discord",
+    "discord.js",
+    "momozin",
+    "bot"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.4.7",
+    "sqlite3": "^5.1.7"
+  }
+}
