@@ -447,22 +447,75 @@ function createActionRows(page) {
   ));
 }
 
-function createNavigationRow(page) {
+function getRowCustomIds(rows) {
+  return rows.flatMap((row) => row.components.map((component) => component.data.custom_id).filter(Boolean));
+}
+
+function collectCustomIds(rows) {
+  return new Set(getRowCustomIds(rows));
+}
+
+function warnDuplicateCustomId(customId) {
+  console.warn(`[Manual] Duplicate custom_id removed: ${customId}`);
+}
+
+function logManualCustomIds(pageId, rows) {
+  console.log(`[Manual] Page: ${pageId}`);
+  console.log('[Manual] custom ids:');
+  getRowCustomIds(rows).forEach((customId) => console.log(`* ${customId}`));
+}
+
+function createNavigationRow(page, usedCustomIds = new Set()) {
   const buttons = [];
-  if (page.id !== 'home') buttons.push(makeButton('manual:page:home', 'Início', 'manual', 'start', ButtonStyle.Secondary));
-  if (page.index > 0) buttons.push(makeButton(`manual:page:${manualPages[page.index - 1].id}`, 'Anterior', 'manual', 'previous', ButtonStyle.Secondary));
-  if (page.index < manualPages.length - 1) buttons.push(makeButton(`manual:page:${manualPages[page.index + 1].id}`, 'Próximo', 'manual', 'next', ButtonStyle.Secondary));
+
+  function addNavigationButton(customId, label, category, key) {
+    if (usedCustomIds.has(customId)) {
+      warnDuplicateCustomId(customId);
+      return;
+    }
+    buttons.push(makeButton(customId, label, category, key, ButtonStyle.Secondary));
+    usedCustomIds.add(customId);
+  }
+
+  if (page.id !== 'home') addNavigationButton('manual:page:home', 'Início', 'manual', 'start');
+  if (page.index > 0) addNavigationButton(`manual:page:${manualPages[page.index - 1].id}`, 'Anterior', 'manual', 'previous');
+  if (page.index < manualPages.length - 1) addNavigationButton(`manual:page:${manualPages[page.index + 1].id}`, 'Próximo', 'manual', 'next');
 
   if (buttons.length === 0) return null;
   return new ActionRowBuilder().addComponents(buttons);
 }
 
+function removeDuplicateButtons(rows) {
+  const usedCustomIds = new Set();
+
+  return rows
+    .map((row) => {
+      const uniqueComponents = row.components.filter((component) => {
+        const customId = component.data.custom_id;
+        if (!customId) return true;
+        if (usedCustomIds.has(customId)) {
+          warnDuplicateCustomId(customId);
+          return false;
+        }
+        usedCustomIds.add(customId);
+        return true;
+      });
+
+      if (uniqueComponents.length === row.components.length) return row;
+      if (uniqueComponents.length === 0) return null;
+      return new ActionRowBuilder().addComponents(uniqueComponents);
+    })
+    .filter(Boolean);
+}
+
 function createManualPageRows(pageId = 'home') {
   const page = manualPageMap.get(pageId) || manualPageMap.get('home');
   const rows = createActionRows(page);
-  const navigationRow = createNavigationRow(page);
+  const navigationRow = createNavigationRow(page, collectCustomIds(rows));
   if (navigationRow) rows.push(navigationRow);
-  return rows;
+  const uniqueRows = removeDuplicateButtons(rows);
+  logManualCustomIds(page.id, uniqueRows);
+  return uniqueRows;
 }
 
 function getManualPage(pageId) {

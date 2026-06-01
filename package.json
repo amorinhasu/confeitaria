@@ -9,7 +9,8 @@
     "deploy": "node src/deploy-commands.js",
     "start": "node src/index.js",
     "start:auto-deploy": "AUTO_DEPLOY_COMMANDS=true node src/index.js",
-    "emojis": "node src/list-emojis.js"
+    "emojis": "node src/list-emojis.js",
+    "test:manual": "node scripts/check-manual-custom-ids.js"
   },
   "keywords": [
     "discord",
