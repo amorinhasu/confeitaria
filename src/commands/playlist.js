@@ -1,6 +1,9 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { getPlaylist, setPlaylist } = require('../database/repositories');
+const { withEmoji } = require('../utils/emojis');
+const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
+const { respond } = require('../utils/interactions');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -19,16 +22,16 @@ module.exports = {
     if (subcommand === 'definir') {
       const link = interaction.options.getString('link', true);
       await setPlaylist(link);
-      await interaction.reply({ embeds: [momozinEmbed({ title: '🎧 Playlist salva', description: 'Link guardado. Sem Spotify API por enquanto, só o aconchego manual.' })] });
+      await respond(interaction, { embeds: [momozinEmbed({ title: withEmoji('playlist', 'music', 'Playlist salva'), description: getText('playlist_saved', 'Link guardado. Sem Spotify API por enquanto, só o aconchego manual.') })] });
       return;
     }
 
     const playlist = await getPlaylist();
     if (!playlist) {
-      await interaction.reply({ content: '🎧 Nenhuma playlist salva ainda. Use `/playlist definir`.', ephemeral: true });
+      await respond(interaction, { content: withEmoji('playlist', 'music', getText('playlist_empty', 'Nenhuma playlist salva ainda. Use `/playlist definir`.')), ephemeral: true });
       return;
     }
 
-    await interaction.reply({ embeds: [momozinEmbed({ title: '🎧 Playlist do casal', description: playlist.link })] });
+    await respond(interaction, { embeds: [momozinEmbed({ title: withEmoji('playlist', 'music', 'Playlist do casal'), description: playlist.link })] });
   },
 };

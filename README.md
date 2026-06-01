@@ -104,3 +104,21 @@ src/
   events/        Eventos do Discord
   utils/         Configuração, tema e helpers
 ```
+
+## Personalização futura
+
+- Textos editáveis ficam preparados em `config/texts.json`.
+- Assets visuais ficam organizados em `assets/visuals/` e cadastrados em `config/assets.json`.
+- Para exibir banners/imagens em embeds futuramente, hospede os assets em uma URL pública e configure `ASSETS_BASE_URL` no ambiente.
+
+## Emojis customizados
+
+- Emojis ficam centralizados em `config/emojis.json`.
+- O bot usa fallback Unicode quando o ID do emoji customizado ainda não foi preenchido.
+- Para listar emojis do servidor Discord configurado no `.env`, rode:
+
+```bash
+npm run emojis
+```
+
+Depois copie os IDs retornados para `config/emojis.json`.

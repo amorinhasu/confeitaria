@@ -53,7 +53,7 @@ async function migrate() {
       kaiki_name TEXT NOT NULL DEFAULT 'Kaiki',
       nicknames TEXT NOT NULL DEFAULT 'pudinzinho, panquequinha, momo',
       start_date TEXT NOT NULL DEFAULT '2026-05-05',
-      status TEXT NOT NULL DEFAULT 'Em call de madrugada, rindo baixo e se escolhendo todo dia 💙',
+      status TEXT NOT NULL DEFAULT 'Em call de madrugada, rindo baixo e se escolhendo todo dia',
       achievements TEXT NOT NULL DEFAULT 'Sobreviver a saudade; Maratonar juntinhos; Estudar sem surtar; Farmar MomoCoins'
     );
 

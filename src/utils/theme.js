@@ -5,7 +5,7 @@ const COLORS = {
   darkBlue: 0x2f80ed,
 };
 
-function momozinEmbed({ title, description, fields = [], footer, color = COLORS.blue }) {
+function momozinEmbed({ title, description, fields = [], footer, color = COLORS.blue, image, thumbnail }) {
   const embed = new EmbedBuilder()
     .setColor(color)
     .setTitle(title)
@@ -13,6 +13,8 @@ function momozinEmbed({ title, description, fields = [], footer, color = COLORS.
     .setTimestamp();
 
   if (fields.length > 0) embed.addFields(fields);
+  if (image) embed.setImage(image);
+  if (thumbnail) embed.setThumbnail(thumbnail);
   if (footer) embed.setFooter({ text: footer });
 
   return embed;

@@ -1,6 +1,9 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { buyGift, giftsCatalog } = require('../database/repositories');
+const { withEmoji } = require('../utils/emojis');
+const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
+const { respond } = require('../utils/interactions');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -21,9 +24,9 @@ module.exports = {
     const subcommand = interaction.options.getSubcommand();
 
     if (subcommand === 'loja') {
-      await interaction.reply({ embeds: [momozinEmbed({
-        title: '🎁 Loja de Mimos',
-        description: 'Troque MomoCoins por recompensas fofas, caóticas e aprovadas pelo departamento azul.',
+      await respond(interaction, { embeds: [momozinEmbed({
+        title: withEmoji('mimos', 'gift', 'Loja de Mimos'),
+        description: getText('gifts_shop_description', 'Troque MomoCoins por recompensas fofas, caóticas e aprovadas pelo departamento azul.'),
         fields: giftsCatalog.map((gift) => ({ name: `${gift.label} — ${gift.cost} moedas`, value: gift.description, inline: false })),
       })] });
       return;
@@ -33,18 +36,18 @@ module.exports = {
     const result = await buyGift(key);
 
     if (!result.ok && result.reason === 'no_coins') {
-      await interaction.reply({ content: `🎁 Ainda faltam MomoCoins para comprar ${result.item.label}. Saldo: ${result.balance}.`, ephemeral: true });
+      await respond(interaction, { content: `${withEmoji('mimos', 'gift', getText('gift_no_coins', 'Ainda faltam MomoCoins para comprar este mimo.'))} Saldo: ${result.balance}.`, ephemeral: true });
       return;
     }
 
     if (!result.ok) {
-      await interaction.reply({ content: '🎁 Item não encontrado na lojinha.', ephemeral: true });
+      await respond(interaction, { content: withEmoji('mimos', 'gift', getText('gift_not_found', 'Item não encontrado na lojinha.')), ephemeral: true });
       return;
     }
 
-    await interaction.reply({ embeds: [momozinEmbed({
-      title: '🎁 Mimo comprado',
-      description: `${result.item.label} resgatado com sucesso!`,
+    await respond(interaction, { embeds: [momozinEmbed({
+      title: withEmoji('mimos', 'gift', 'Mimo comprado'),
+      description: `${result.item.label} ${getText('gift_bought', 'resgatado com sucesso!')}`,
       fields: [{ name: 'Saldo restante', value: `${result.balance} MomoCoins`, inline: true }],
     })] });
   },

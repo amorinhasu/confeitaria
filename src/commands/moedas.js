@@ -1,6 +1,9 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { addCoins, getCoins } = require('../database/repositories');
+const { withEmoji } = require('../utils/emojis');
+const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
+const { respond } = require('../utils/interactions');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -21,15 +24,15 @@ module.exports = {
       const quantity = interaction.options.getInteger('quantidade', true);
       const reason = interaction.options.getString('motivo', true);
       const balance = await addCoins(quantity);
-      await interaction.reply({ embeds: [momozinEmbed({
-        title: '🪙 MomoCoins adicionadas',
+      await respond(interaction, { embeds: [momozinEmbed({
+        title: withEmoji('momocoins', 'coin', getText('coins_added_title', 'MomoCoins adicionadas')),
         description: `+${quantity} MomoCoins por: ${reason}`,
-        fields: [{ name: 'Saldo atual', value: `${balance} MomoCoins`, inline: true }],
+        fields: [{ name: getText('coins_balance_prefix', 'Saldo atual'), value: `${balance} MomoCoins`, inline: true }],
       })] });
       return;
     }
 
     const balance = await getCoins();
-    await interaction.reply({ embeds: [momozinEmbed({ title: '🪙 Cofrinho Momozin', description: `Saldo atual: **${balance} MomoCoins**.` })] });
+    await respond(interaction, { embeds: [momozinEmbed({ title: withEmoji('momocoins', 'coin', 'Cofrinho Momozin'), description: `${getText('coins_balance_prefix', 'Saldo atual')}: **${balance} MomoCoins**.` })] });
   },
 };

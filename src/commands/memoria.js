@@ -1,6 +1,9 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { addMemory } = require('../database/repositories');
+const { withEmoji } = require('../utils/emojis');
+const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
+const { respond } = require('../utils/interactions');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -19,6 +22,6 @@ module.exports = {
       interaction.options.getString('data', true),
     );
 
-    await interaction.reply({ embeds: [momozinEmbed({ title: '📸 Memória salva', description: 'Essa memória foi colocada no mural azul do Momozin.' })] });
+    await respond(interaction, { embeds: [momozinEmbed({ title: withEmoji('memorias', 'photo', 'Memória salva'), description: getText('memoria_saved', 'Essa memória foi colocada no mural azul do Momozin.') })] });
   },
 };

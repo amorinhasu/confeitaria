@@ -1,6 +1,9 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { addLoveNote, getRandomLoveNote } = require('../database/repositories');
+const { withEmoji } = require('../utils/emojis');
+const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
+const { respond } = require('../utils/interactions');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -19,16 +22,16 @@ module.exports = {
     if (subcommand === 'adicionar') {
       const text = interaction.options.getString('texto', true);
       await addLoveNote(text);
-      await interaction.reply({ embeds: [momozinEmbed({ title: '💌 Recado salvo', description: 'O Momozin guardou essa frase no potinho azul.' })] });
+      await respond(interaction, { embeds: [momozinEmbed({ title: withEmoji('recados', 'letter', 'Recado salvo'), description: getText('recado_saved', 'O Momozin guardou essa frase no potinho azul.') })] });
       return;
     }
 
     const note = await getRandomLoveNote();
     if (!note) {
-      await interaction.reply({ content: '💌 Ainda não tem recados salvos. Use `/recado adicionar` primeiro.', ephemeral: true });
+      await respond(interaction, { content: withEmoji('recados', 'letter', getText('recado_empty', 'Ainda não tem recados salvos. Use `/recado adicionar` primeiro.')), ephemeral: true });
       return;
     }
 
-    await interaction.reply({ embeds: [momozinEmbed({ title: '💌 Frase do dia', description: note.text })] });
+    await respond(interaction, { embeds: [momozinEmbed({ title: withEmoji('recados', 'letter', 'Frase do dia'), description: note.text })] });
   },
 };

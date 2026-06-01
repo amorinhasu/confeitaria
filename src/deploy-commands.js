@@ -15,7 +15,7 @@ async function deploy() {
 
   console.log(`Registrando ${commands.length} slash commands no servidor ${guildId}...`);
   await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
-  console.log('💙 Slash commands do Momozin registrados com sucesso.');
+  console.log('Slash commands do Momozin registrados com sucesso.');
 }
 
 deploy().catch((error) => {

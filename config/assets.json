@@ -1,0 +1,83 @@
+{
+  "base_url_env": "ASSETS_BASE_URL",
+  "items": {
+    "panel_main_banner": {
+      "file": "assets/visuals/panel/painel-principal-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/painel embed principal"
+    },
+    "manual_home_banner": {
+      "file": "assets/visuals/manual/manual-home-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/manual embed inicial"
+    },
+    "manual_category_banner": {
+      "file": "assets/visuals/manual/manual-categoria-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "Embeds de categorias do manual"
+    },
+    "love_notes_banner": {
+      "file": "assets/visuals/recados/recados-banner.gif",
+      "format": "GIF",
+      "size": "800x300",
+      "usage": "/recado adicionar e /recado sortear"
+    },
+    "memories_banner": {
+      "file": "assets/visuals/memorias/memorias-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/memoria adicionar"
+    },
+    "cine_banner": {
+      "file": "assets/visuals/cine/cinemomozin-banner.jpg",
+      "format": "JPG",
+      "size": "1200x400",
+      "usage": "/cine adicionar"
+    },
+    "playlist_banner": {
+      "file": "assets/visuals/playlist/playlist-banner.gif",
+      "format": "GIF",
+      "size": "800x300",
+      "usage": "/playlist definir e /playlist ver"
+    },
+    "study_banner": {
+      "file": "assets/visuals/estudos/estudos-kaiki-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/estudo iniciar e /estudo finalizar"
+    },
+    "coins_banner": {
+      "file": "assets/visuals/momocoins/momocoins-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/moedas ver e /moedas adicionar"
+    },
+    "gifts_banner": {
+      "file": "assets/visuals/mimos/loja-mimos-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/mimo loja e /mimo comprar"
+    },
+    "profile_banner": {
+      "file": "assets/visuals/perfil/perfil-casal-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/perfil"
+    },
+    "success_gif": {
+      "file": "assets/visuals/feedback/sucesso-momozin.gif",
+      "format": "GIF",
+      "size": "600x240",
+      "usage": "Mensagens de sucesso"
+    },
+    "error_gif": {
+      "file": "assets/visuals/feedback/erro-momozin.gif",
+      "format": "GIF",
+      "size": "600x240",
+      "usage": "Mensagens de erro"
+    }
+  }
+}

@@ -21,8 +21,14 @@ function loadEvents(client) {
 
   eventFiles.forEach((file) => {
     const event = require(path.join(eventsPath, file));
-    if (event.once) client.once(event.name, (...args) => event.execute(...args));
-    else client.on(event.name, (...args) => event.execute(...args));
+    const listener = (...args) => {
+      Promise.resolve(event.execute(...args)).catch((error) => {
+        console.error(`Erro não tratado no evento ${event.name}:`, error);
+      });
+    };
+
+    if (event.once) client.once(event.name, listener);
+    else client.on(event.name, listener);
   });
 }
 

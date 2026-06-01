@@ -1,12 +1,13 @@
 const db = require('./db');
+const { withEmoji } = require('../utils/emojis');
 
 const giftsCatalog = [
-  { key: 'panquequinha', label: '🥞 Panquequinha', cost: 15, description: 'Um mimo fofinho de panquequinha.' },
-  { key: 'pudinzinho', label: '🍮 Pudinzinho', cost: 15, description: 'Pudinzinho para adoçar a call.' },
-  { key: 'cartinha', label: '💌 Cartinha', cost: 25, description: 'Uma cartinha feita com carinho.' },
-  { key: 'vale_filme', label: '🎬 Vale filme', cost: 35, description: 'Kaiki escolhe um filme/série da vez.' },
-  { key: 'vale_roblox', label: '🎮 Vale Roblox', cost: 40, description: 'Uma gameplay de Roblox garantida.' },
-  { key: 'vale_carinho', label: '💙 Vale carinho', cost: 50, description: 'Vale carinho ilimitado e risadinhas.' },
+  { key: 'panquequinha', label: withEmoji('mimos', 'pancake', 'Panquequinha'), cost: 15, description: 'Um mimo fofinho de panquequinha.' },
+  { key: 'pudinzinho', label: withEmoji('mimos', 'pudding', 'Pudinzinho'), cost: 15, description: 'Pudinzinho para adoçar a call.' },
+  { key: 'cartinha', label: withEmoji('mimos', 'letter', 'Cartinha'), cost: 25, description: 'Uma cartinha feita com carinho.' },
+  { key: 'vale_filme', label: withEmoji('mimos', 'movie', 'Vale filme'), cost: 35, description: 'Kaiki escolhe um filme/série da vez.' },
+  { key: 'vale_roblox', label: withEmoji('mimos', 'roblox', 'Vale Roblox'), cost: 40, description: 'Uma gameplay de Roblox garantida.' },
+  { key: 'vale_carinho', label: withEmoji('mimos', 'care', 'Vale carinho'), cost: 50, description: 'Vale carinho ilimitado e risadinhas.' },
 ];
 
 async function getProfile() {
@@ -59,7 +60,7 @@ async function getCoins() {
 async function addCoins(quantity) {
   await db.ready;
   await db.run('UPDATE coins SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [quantity]);
-  return getCoins();
+  return await getCoins();
 }
 
 async function spendCoins(quantity) {

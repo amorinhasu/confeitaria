@@ -1,7 +1,11 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { getProfile } = require('../database/repositories');
+const { getAssetPublicUrl } = require('../utils/assets');
 const { daysSince } = require('../utils/date');
+const { emoji, withEmoji } = require('../utils/emojis');
+const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
+const { respond } = require('../utils/interactions');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,20 +14,24 @@ module.exports = {
   async execute(interaction) {
     const profile = await getProfile();
     const days = daysSince(profile.start_date);
-    const achievements = profile.achievements.split(';').map((item) => `🏆 ${item.trim()}`).join('\n');
+    const achievements = profile.achievements
+      .split(';')
+      .map((item) => `${emoji('perfil', 'achievement')} ${item.trim()}`)
+      .join('\n');
 
     const embed = momozinEmbed({
-      title: '💙 Perfil do casal',
-      description: 'O arquivo oficial, fofo e de madrugada do casal Momozin.',
+      title: withEmoji('perfil', 'heart', getText('profile_title', 'Perfil do casal')),
+      description: getText('profile_description', 'O arquivo oficial, fofo e de madrugada do casal Momozin.'),
+      image: getAssetPublicUrl('profile_banner'),
       fields: [
-        { name: 'Casal', value: `✨ ${profile.trivia_name} + ${profile.kaiki_name}`, inline: true },
+        { name: 'Casal', value: `${emoji('perfil', 'couple')} ${profile.trivia_name} + ${profile.kaiki_name}`, inline: true },
         { name: 'Apelidos', value: profile.nicknames, inline: true },
         { name: 'Contador desde o dia 05', value: `${days} dia(s) desde ${profile.start_date}`, inline: false },
-        { name: 'Status', value: profile.status, inline: false },
+        { name: 'Status', value: withEmoji('perfil', 'heart', profile.status), inline: false },
         { name: 'Conquistas', value: achievements, inline: false },
       ],
     });
 
-    await interaction.reply({ embeds: [embed] });
+    await respond(interaction, { embeds: [embed] });
   },
 };
