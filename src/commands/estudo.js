@@ -9,10 +9,10 @@ const { respond } = require('../utils/interactions');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('estudo')
-    .setDescription('Controla sessões de estudo do Kaiki.')
+    .setDescription('Controla sessões de foco do casal.')
     .addSubcommand((subcommand) => subcommand
       .setName('iniciar')
-      .setDescription('Inicia uma sessão de estudo do Kaiki.'))
+      .setDescription('Inicia uma sessão de foco do casal.'))
     .addSubcommand((subcommand) => subcommand
       .setName('finalizar')
       .setDescription('Finaliza a sessão e recompensa com MomoCoins.')),
@@ -25,7 +25,7 @@ module.exports = {
         await respond(interaction, { content: withEmoji('estudos', 'book', getText('study_already_open', 'Já existe uma sessão de estudo aberta. Finalize antes de iniciar outra, panquequinha.')), ephemeral: true });
         return;
       }
-      await respond(interaction, { embeds: [momozinEmbed({ title: withEmoji('estudos', 'book', 'Estudo iniciado'), description: getText('study_started', 'Cronômetro ligado para o Kaiki farmar foco e MomoCoins.') })] });
+      await respond(interaction, { embeds: [momozinEmbed({ title: 'Estudo iniciado', description: getText('study_started', 'Cronômetro ligado para o foco do casal render MomoCoins.') })] });
       return;
     }
 
@@ -36,8 +36,8 @@ module.exports = {
     }
 
     await respond(interaction, { embeds: [momozinEmbed({
-      title: withEmoji('estudos', 'book', 'Estudo finalizado'),
-      description: getText('study_finished_message', 'Kaiki estudou bonito e o Momozin ficou orgulhoso.'),
+      title: 'Estudo finalizado',
+      description: getText('study_finished_message', 'Sessão finalizada com carinho. O Momozin ficou orgulhoso do foco do casal.'),
       fields: [
         { name: 'Tempo', value: formatDuration(result.minutes * 60000), inline: true },
         { name: 'Recompensa', value: `+${result.coinsAwarded} MomoCoins`, inline: true },

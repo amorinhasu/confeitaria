@@ -22,7 +22,7 @@ module.exports = {
     if (subcommand === 'definir') {
       const link = interaction.options.getString('link', true);
       await setPlaylist(link);
-      await respond(interaction, { embeds: [momozinEmbed({ title: withEmoji('playlist', 'music', 'Playlist salva'), description: getText('playlist_saved', 'Link guardado. Sem Spotify API por enquanto, só o aconchego manual.') })] });
+      await respond(interaction, { embeds: [momozinEmbed({ title: 'Playlist salva', description: getText('playlist_saved', 'Link guardado. Sem Spotify API por enquanto, só o aconchego manual.') })] });
       return;
     }
 
@@ -32,6 +32,6 @@ module.exports = {
       return;
     }
 
-    await respond(interaction, { embeds: [momozinEmbed({ title: withEmoji('playlist', 'music', 'Playlist do casal'), description: playlist.link })] });
+    await respond(interaction, { embeds: [momozinEmbed({ title: 'Playlist do casal', description: playlist.link })] });
   },
 };

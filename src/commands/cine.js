@@ -1,7 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { addMovie } = require('../database/repositories');
 const { getAssetPublicUrl } = require('../utils/assets');
-const { withEmoji } = require('../utils/emojis');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
 const { respond } = require('../utils/interactions');
@@ -30,7 +29,7 @@ module.exports = {
     await addMovie(name, type, platform, triviaRating, kaikiRating, comment);
 
     await respond(interaction, { embeds: [momozinEmbed({
-      title: withEmoji('cine', 'movie', 'CineMomozin atualizado'),
+      title: 'CineMomozin atualizado',
       description: `${name} ${getText('cine_saved', 'entrou para a listinha azul do casal.')}`,
       image: getAssetPublicUrl('cine_banner'),
       fields: [

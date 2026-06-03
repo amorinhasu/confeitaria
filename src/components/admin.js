@@ -1,8 +1,11 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
 const assetsConfig = require('../../config/assets.json');
 const { getAssetPublicUrl } = require('../utils/assets');
-const { buttonEmoji, listConfiguredEmojis, withEmoji } = require('../utils/emojis');
+const { adminUserId, kaikiUserId, triviaUserId } = require('../utils/config');
+const { buttonEmoji, listConfiguredEmojis } = require('../utils/emojis');
 const { momozinEmbed } = require('../utils/theme');
+const { getPudinzinhoRoleDiagnostics } = require('../utils/pudinzinhoRole');
+const { getText } = require('../utils/texts');
 const { manualPages } = require('./manual');
 const {
   countGifts,
@@ -14,7 +17,7 @@ const {
   getProfile,
 } = require('../database/repositories');
 
-const ADMIN_TABS = ['sistema', 'configuracao', 'emojis', 'assets', 'manual', 'banco'];
+const ADMIN_TABS = ['sistema', 'configuracao', 'emojis', 'assets', 'manual', 'banco', 'auditoria'];
 
 function statusLabel(status, text) {
   const icon = status === 'ok' ? '✅' : status === 'partial' ? '⚠️' : '❌';
@@ -41,6 +44,7 @@ function createAdminRows(activeTab = 'sistema') {
     new ActionRowBuilder().addComponents(tabButtons),
     new ActionRowBuilder().addComponents(
       makeButton('admin:banco', 'Banco', 'momocoins', 'coin', activeTab === 'banco' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+      makeButton('admin:auditoria', 'Auditoria', 'feedback', 'success', activeTab === 'auditoria' ? ButtonStyle.Primary : ButtonStyle.Secondary),
       makeButton('admin:diagnostico', 'Executar Diagnóstico', 'feedback', 'warning', ButtonStyle.Danger),
     ),
   ];
@@ -84,7 +88,7 @@ function createSystemEmbed() {
   ];
 
   return momozinEmbed({
-    title: withEmoji('feedback', 'success', 'Painel Administrativo — Sistema'),
+    title: getText('admin_system_title', 'Painel Administrativo — Sistema'),
     description: lines.join('\n'),
     image: getAssetPublicUrl('panel_main_banner'),
   });
@@ -97,7 +101,7 @@ async function createConfigurationEmbed() {
   const formattedDate = setup?.created_at ? new Date(`${setup.created_at}Z`).toLocaleDateString('pt-BR') : 'Não configurado';
 
   return momozinEmbed({
-    title: withEmoji('perfil', 'heart', 'Painel Administrativo — Configuração'),
+    title: getText('admin_config_title', 'Painel Administrativo — Configuração'),
     description: [
       `Status: ${configured ? 'Configurado ✅' : 'Pendente ⚠️'}`,
       '',
@@ -129,7 +133,7 @@ function createEmojisEmbed() {
   }));
 
   return momozinEmbed({
-    title: withEmoji('manual', 'home', 'Painel Administrativo — Emojis'),
+    title: getText('admin_emojis_title', 'Painel Administrativo — Emojis'),
     description: 'Lista dos emojis usados pelo bot e se estão renderizando como custom ou fallback.',
     fields,
     image: getAssetPublicUrl('manual_category_banner'),
@@ -144,7 +148,7 @@ function createAssetsEmbed() {
   }));
 
   return momozinEmbed({
-    title: withEmoji('memorias', 'photo', 'Painel Administrativo — Assets'),
+    title: getText('admin_assets_title', 'Painel Administrativo — Assets'),
     description: 'Banners e imagens configurados para os embeds.',
     fields,
     image: getAssetPublicUrl('manual_category_banner'),
@@ -153,8 +157,8 @@ function createAssetsEmbed() {
 
 function createManualAdminEmbed() {
   return momozinEmbed({
-    title: withEmoji('manual', 'home', 'Painel Administrativo — Manual'),
-    description: manualPages.map((page) => `✅ ${page.title} — Criada`).join('\n'),
+    title: getText('admin_manual_title', 'Painel Administrativo — Manual'),
+    description: manualPages.map((page) => `${page.title} — Criada`).join('\n'),
     image: getAssetPublicUrl('manual_home_banner'),
   });
 }
@@ -170,7 +174,7 @@ async function createDatabaseEmbed() {
   ]);
 
   return momozinEmbed({
-    title: withEmoji('momocoins', 'coin', 'Painel Administrativo — Banco'),
+    title: getText('admin_database_title', 'Painel Administrativo — Banco'),
     description: [
       `Casal configurado: ${setup ? '✅' : '⚠️'}`,
       `IDs registrados: ${setup ? `${setup.trivia_id} / ${setup.kaiki_id}` : 'não configurado'}`,
@@ -195,19 +199,61 @@ async function createDiagnosticEmbed() {
   if (manualPages.length < 9) problems.push('⚠️ manual com páginas incompletas');
 
   return momozinEmbed({
-    title: withEmoji('feedback', problems.length ? 'warning' : 'success', 'Diagnóstico do Momozin'),
+    title: getText('admin_diagnostic_title', 'Diagnóstico do Momozin'),
     description: problems.length ? `${problems.length} problema(s) encontrado(s):\n\n${problems.slice(0, 20).join('\n')}` : 'Tudo funcionando. Manual criado, emojis seguros, banco acessível, painel carregando e assets principais configurados.',
     image: getAssetPublicUrl(problems.length ? 'error_gif' : 'success_gif'),
   });
 }
 
-async function createAdminEmbed(tab = 'sistema') {
+
+async function createAuditEmbed(interaction) {
+  const [setup, notes, memories, movies, balance, gifts] = await Promise.all([
+    getCoupleSetup(),
+    countLoveNotes(),
+    countMemories(),
+    countMovies(),
+    getCoins(),
+    countGifts(),
+  ]);
+
+  const assetsWithoutUrl = getAssetStatusEntries().filter((asset) => asset.status !== 'ok').map((asset) => asset.key);
+  const invalidEmojis = getEmojiStatusEntries().filter((item) => item.status !== 'ok').map((item) => `${item.category}.${item.key}`);
+  const pudinzinho = await getPudinzinhoRoleDiagnostics(interaction?.guild || null);
+
+  const botPermissions = interaction?.guild?.members?.me?.permissions;
+  const botCanManageRoles = botPermissions ? botPermissions.has(PermissionFlagsBits.ManageRoles) : pudinzinho.botCanManageRoles;
+
+  return momozinEmbed({
+    title: getText('audit_title', 'Auditoria do Momozin'),
+    description: [
+      `Casal configurado: ${setup ? 'sim' : 'não'}`,
+      `IDs no banco: ${setup ? `${setup.trivia_id} / ${setup.kaiki_id}` : 'não configurado'}`,
+      `IDs do .env: ADMIN=${adminUserId || 'não definido'} | TRIVIA=${triviaUserId || 'não definido'} | KAIKI=${kaikiUserId || 'não definido'}`,
+      'Banco SQLite: acessível',
+      `Recados: ${notes}`,
+      `Memórias: ${memories}`,
+      `Filmes: ${movies}`,
+      `Mimos comprados: ${gifts}`,
+      `Saldo MomoCoins: ${balance}`,
+      `Assets sem URL pública: ${assetsWithoutUrl.length ? assetsWithoutUrl.join(', ') : 'nenhum'}`,
+      `Emojis em fallback/inválidos: ${invalidEmojis.length ? invalidEmojis.slice(0, 12).join(', ') : 'nenhum'}`,
+      `Permissão Gerenciar Cargos: ${botCanManageRoles ? 'sim' : 'não/indisponível'}`,
+      `Cargo Pudinzinho configurado: ${pudinzinho.configured ? 'sim' : 'não'}`,
+      `Cargo Pudinzinho encontrado: ${pudinzinho.found ? `sim (${pudinzinho.roleName})` : 'não'}`,
+      `Bot acima do Pudinzinho: ${pudinzinho.botAboveRole ? 'sim' : 'não/indisponível'}`,
+    ].join('\n'),
+    image: getAssetPublicUrl('manual_category_banner'),
+  });
+}
+
+async function createAdminEmbed(tab = 'sistema', interaction = null) {
   if (tab === 'configuracao') return createConfigurationEmbed();
   if (tab === 'emojis') return createEmojisEmbed();
   if (tab === 'assets') return createAssetsEmbed();
   if (tab === 'manual') return createManualAdminEmbed();
   if (tab === 'banco') return createDatabaseEmbed();
   if (tab === 'diagnostico') return createDiagnosticEmbed();
+  if (tab === 'auditoria') return createAuditEmbed(interaction);
   return createSystemEmbed();
 }
 

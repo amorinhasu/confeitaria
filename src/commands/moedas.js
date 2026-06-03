@@ -1,7 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { addCoins, getCoins, getRecentCoinTransactions } = require('../database/repositories');
 const { formatCoinTransactions } = require('../utils/coins');
-const { withEmoji } = require('../utils/emojis');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
 const { respond } = require('../utils/interactions');
@@ -26,7 +25,7 @@ module.exports = {
       const reason = interaction.options.getString('motivo', true);
       const balance = await addCoins(quantity, reason, 'manual_add');
       await respond(interaction, { embeds: [momozinEmbed({
-        title: withEmoji('momocoins', 'coin', getText('coins_added_title', 'MomoCoins adicionadas')),
+        title: getText('coins_added_title', 'MomoCoins adicionadas'),
         description: `+${quantity} MomoCoins por: ${reason}`,
         fields: [{ name: getText('coins_balance_prefix', 'Saldo atual'), value: `${balance} MomoCoins`, inline: true }],
       })] });
@@ -36,7 +35,7 @@ module.exports = {
     const balance = await getCoins();
     const transactions = await getRecentCoinTransactions(5);
     await respond(interaction, { embeds: [momozinEmbed({
-      title: withEmoji('momocoins', 'coin', 'Cofrinho Momozin'),
+      title: 'Cofrinho Momozin',
       description: `${getText('coins_balance_prefix', 'Saldo atual')}: **${balance} MomoCoins**.`,
       fields: [{ name: 'Últimas movimentações', value: formatCoinTransactions(transactions), inline: false }],
     })] });

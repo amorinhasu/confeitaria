@@ -12,7 +12,7 @@ Primeira versão do **Momozin**, um bot privado de casal para Discord feito para
 - Memórias do casal.
 - CineMomozin para filmes e séries assistidos.
 - Playlist salva manualmente por link.
-- MomoCoins, estudos do Kaiki e loja de mimos.
+- MomoCoins, foco do casal e loja de mimos.
 
 > Spotify API e TMDB ainda **não** foram implementados. A chave TMDB fica preparada no `.env` para uma versão futura.
 
@@ -42,6 +42,11 @@ DISCORD_CLIENT_ID=1510891897176985611
 DISCORD_GUILD_ID=1505727748822270144
 TMDB_API_KEY=sua_chave_tmdb_para_versao_futura
 DATABASE_URL=./data/momozin.sqlite
+AUTO_DEPLOY_COMMANDS=false
+ADMIN_USER_ID=
+TRIVIA_USER_ID=
+KAIKI_USER_ID=
+PUDINZINHO_ROLE_ID=
 ```
 
 ## Scripts
@@ -77,7 +82,7 @@ npm start
 - `/playlist ver` — mostra o link salvo.
 - `/moedas ver` — mostra o saldo de MomoCoins.
 - `/moedas adicionar quantidade: motivo:` — adiciona moedas manualmente.
-- `/estudo iniciar` — inicia sessão de estudo do Kaiki.
+- `/estudo iniciar` — inicia sessão de foco do casal.
 - `/estudo finalizar` — finaliza sessão, calcula tempo e dá MomoCoins.
 - `/mimo loja` — mostra a loja de mimos.
 - `/mimo comprar item:` — compra um mimo usando moedas.

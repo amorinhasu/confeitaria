@@ -1,6 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getAssetPublicUrl } = require('../utils/assets');
-const { buttonEmoji, withEmoji } = require('../utils/emojis');
+const { buttonEmoji } = require('../utils/emojis');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
 
@@ -22,8 +22,8 @@ const panelAreas = {
     description: 'A trilha sonora oficial da confeitaria de madrugada.',
   },
   estudos: {
-    emojiCategory: 'painel', emojiKey: 'estudos', label: 'Estudos', title: 'Estudos do Kaiki', image: 'study_banner',
-    description: 'Foco do Kaiki, cronômetro ligado e MomoCoins pingando.',
+    emojiCategory: 'painel', emojiKey: 'estudos', label: 'Estudos', title: getText('study_panel_title', 'Foco do Casal'), image: 'study_banner',
+    description: getText('study_panel_description', 'Sessões de estudo para Trívia e Kaiki, com cronômetro ligado e MomoCoins pingando.'),
   },
   mimos: {
     emojiCategory: 'painel', emojiKey: 'mimos', label: 'Mimos', title: 'Loja de Mimos', image: 'gifts_banner',
@@ -71,6 +71,7 @@ const areaActions = {
     ['panel:perfil:view', 'Ver perfil', 'perfil', 'heart'],
     ['panel:perfil:achievements', 'Conquistas', 'perfil', 'achievement'],
     ['panel:perfil:status', 'Status', 'perfil', 'heart'],
+    ['panel:perfil:pudinzinho', 'Virar Pudinzinho', 'mimos', 'pudding'],
   ],
   manual: [
     ['panel:manual:open', 'Abrir manual', 'manual', 'home'],
@@ -86,7 +87,7 @@ function makeButton(customId, label, emojiCategory, emojiKey, style = ButtonStyl
 
 function createPanelEmbed() {
   return momozinEmbed({
-    title: withEmoji('painel', 'main', getText('panel_title', 'Painel Momozin')),
+    title: getText('panel_title', 'Painel Momozin'),
     description: getText('panel_description', 'Bem-vindos ao quartinho azul de madrugada da Trívia e do Kaiki. Escolha uma área nos botões abaixo.'),
     footer: getText('panel_footer', 'Momozin acordado, fofo e levemente engraçadinho.'),
     image: getAssetPublicUrl('panel_main_banner'),
@@ -105,8 +106,8 @@ function createAreaEmbed(areaId) {
   const area = panelAreas[areaId];
   if (!area) return null;
   return momozinEmbed({
-    title: withEmoji(area.emojiCategory, area.emojiKey, area.title),
-    description: `${area.description}\n\nEscolha uma ação abaixo, momo.`,
+    title: area.title,
+    description: `${area.description}\n\n${getText('panel_action_hint', 'Escolha uma ação abaixo, momo.')}`,
     image: getAssetPublicUrl(area.image),
   });
 }

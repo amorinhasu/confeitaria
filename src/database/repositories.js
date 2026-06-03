@@ -23,6 +23,34 @@ const giftsCatalog = [
   createGift('vale_carinho', 'care', 'Vale carinho', 50, 'Vale carinho ilimitado e risadinhas.'),
 ];
 
+const INITIAL_DATING_MEMORY = {
+  title: 'Pedido de namoro no Roblox',
+  description: 'Kaiki pediu Trívia em namoro no dia 03/06, dentro do Roblox, em um mapa feito do zero para ela.',
+  date: '2026-06-03',
+};
+
+const INITIAL_DATING_ACHIEVEMENT = 'Pedido de namoro no Roblox em 03/06';
+
+async function ensureEnvironmentCoupleSetup(triviaId, kaikiId) {
+  if (!triviaId || !kaikiId) return null;
+  return saveCoupleSetup(triviaId, kaikiId);
+}
+
+async function ensureInitialCoupleMemory() {
+  await db.ready;
+  const existingMemory = await db.get('SELECT id FROM memories WHERE title = ? OR description = ? LIMIT 1', [INITIAL_DATING_MEMORY.title, INITIAL_DATING_MEMORY.description]);
+  if (!existingMemory) {
+    await db.run('INSERT INTO memories (title, description, memory_date) VALUES (?, ?, ?)', [INITIAL_DATING_MEMORY.title, INITIAL_DATING_MEMORY.description, INITIAL_DATING_MEMORY.date]);
+  }
+
+  const profile = await db.get('SELECT achievements FROM couple_profile WHERE id = 1');
+  const achievements = profile?.achievements || '';
+  if (!achievements.split(';').map((item) => item.trim()).includes(INITIAL_DATING_ACHIEVEMENT)) {
+    const updatedAchievements = achievements ? `${achievements}; ${INITIAL_DATING_ACHIEVEMENT}` : INITIAL_DATING_ACHIEVEMENT;
+    await db.run('UPDATE couple_profile SET achievements = ? WHERE id = 1', [updatedAchievements]);
+  }
+}
+
 async function getCoupleSetup() {
   await db.ready;
   return db.get('SELECT * FROM couple_setup WHERE id = 1');
@@ -205,6 +233,9 @@ async function buyGift(key) {
 
 module.exports = {
   giftsCatalog,
+  INITIAL_DATING_MEMORY,
+  ensureEnvironmentCoupleSetup,
+  ensureInitialCoupleMemory,
   getCoupleSetup,
   saveCoupleSetup,
   getProfile,

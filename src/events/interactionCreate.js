@@ -23,9 +23,10 @@ const {
   startStudySession,
 } = require('../database/repositories');
 const { getAssetPublicUrl } = require('../utils/assets');
-const { isAuthorizedCouple } = require('../utils/authorization');
+const { isAdminUser, isAuthorizedCouple } = require('../utils/authorization');
 const { formatCoinTransactions } = require('../utils/coins');
 const { profileEmbed, studyStatsEmbed } = require('../utils/embeds');
+const { givePudinzinhoRole } = require('../utils/pudinzinhoRole');
 const { buttonEmoji, withEmoji } = require('../utils/emojis');
 const { respondEphemeral, scheduleDefer } = require('../utils/interactions');
 const { getText } = require('../utils/texts');
@@ -72,6 +73,10 @@ async function ensureAuthorized(interaction) {
   return false;
 }
 
+function canUseAdmin(interaction) {
+  return isAdminUser(interaction.user?.id) || Boolean(interaction.memberPermissions?.has(PermissionFlagsBits.Administrator));
+}
+
 async function handlePanelButton(interaction) {
   console.log(`Botão recebido: panel | customId: ${interaction.customId}`);
   const [, areaId, action] = interaction.customId.split(':');
@@ -85,7 +90,7 @@ async function handlePanelButton(interaction) {
   if (!action) {
     const embed = createAreaEmbed(areaId);
     if (!embed) {
-      await interaction.reply({ content: withEmoji('feedback', 'warning', 'Área não encontrada, momo.'), ephemeral: true });
+      await interaction.reply({ content: 'Área não encontrada, momo.', ephemeral: true });
       return;
     }
     await interaction.reply({ embeds: [embed], components: createAreaRows(areaId), ephemeral: true });
@@ -109,21 +114,21 @@ async function handlePanelButton(interaction) {
   if (areaId === 'recados' && action === 'random') {
     const note = await getRandomLoveNote();
     await interaction.editReply(note
-      ? { embeds: [momozinEmbed({ title: withEmoji('recados', 'letter', 'Frase do dia'), description: note.text, image: getAssetPublicUrl('love_notes_banner') })] }
+      ? { embeds: [momozinEmbed({ title: 'Frase do dia', description: note.text, image: getAssetPublicUrl('love_notes_banner') })] }
       : { content: withEmoji('recados', 'letter', getText('recado_empty', 'Ainda não tem recados salvos. Use `/recado adicionar` primeiro.')) });
     return;
   }
 
   if (areaId === 'recados' && action === 'count') {
     const total = await countLoveNotes();
-    await interaction.editReply({ embeds: [momozinEmbed({ title: withEmoji('recados', 'letter', 'Recados guardados'), description: `O potinho azul tem **${total}** recado(s).`, image: getAssetPublicUrl('love_notes_banner') })] });
+    await interaction.editReply({ embeds: [momozinEmbed({ title: 'Recados guardados', description: `O potinho azul tem **${total}** recado(s).`, image: getAssetPublicUrl('love_notes_banner') })] });
     return;
   }
 
   if (areaId === 'memorias' && action === 'list') {
     const memories = await listMemories(5);
     await interaction.editReply({ embeds: [momozinEmbed({
-      title: withEmoji('memorias', 'photo', 'Últimas memórias'),
+      title: 'Últimas memórias',
       description: memories.length ? memories.map((memory) => `**${memory.title}** (${memory.memory_date})\n${memory.description}`).join('\n\n') : 'Ainda não tem memórias no mural azul.',
       image: getAssetPublicUrl('memories_banner'),
     })] });
@@ -133,7 +138,7 @@ async function handlePanelButton(interaction) {
   if (areaId === 'cine' && action === 'list') {
     const movies = await listMovies(5);
     await interaction.editReply({ embeds: [momozinEmbed({
-      title: withEmoji('cine', 'movie', 'Histórico CineMomozin'),
+      title: 'Histórico CineMomozin',
       description: movies.length ? movies.map((movie) => `**${movie.name}** — ${movie.platform}\nTrívia ${movie.trivia_rating}/10 • Kaiki ${movie.kaiki_rating}/10\n${movie.comment}`).join('\n\n') : 'Ainda não tem filme ou série no CineMomozin.',
       image: getAssetPublicUrl('cine_banner'),
     })] });
@@ -143,7 +148,7 @@ async function handlePanelButton(interaction) {
   if (areaId === 'playlist' && action === 'view') {
     const playlist = await getPlaylist();
     await interaction.editReply(playlist
-      ? { embeds: [momozinEmbed({ title: withEmoji('playlist', 'music', 'Playlist do casal'), description: playlist.link, image: getAssetPublicUrl('playlist_banner') })] }
+      ? { embeds: [momozinEmbed({ title: 'Playlist do casal', description: playlist.link, image: getAssetPublicUrl('playlist_banner') })] }
       : { content: withEmoji('playlist', 'music', getText('playlist_empty', 'Nenhuma playlist salva ainda. Use `/playlist definir`.')) });
     return;
   }
@@ -151,7 +156,7 @@ async function handlePanelButton(interaction) {
   if (areaId === 'estudos' && action === 'start') {
     const result = await startStudySession();
     await interaction.editReply(result.created
-      ? { embeds: [momozinEmbed({ title: withEmoji('estudos', 'book', 'Estudo iniciado'), description: getText('study_started', 'Cronômetro ligado para o Kaiki farmar foco e MomoCoins.'), image: getAssetPublicUrl('study_banner') })] }
+      ? { embeds: [momozinEmbed({ title: 'Estudo iniciado', description: getText('study_started', 'Cronômetro ligado para o foco do casal render MomoCoins.'), image: getAssetPublicUrl('study_banner') })] }
       : { content: withEmoji('estudos', 'book', getText('study_already_open', 'Já existe uma sessão de estudo aberta. Finalize antes de iniciar outra, panquequinha.')) });
     return;
   }
@@ -159,7 +164,7 @@ async function handlePanelButton(interaction) {
   if (areaId === 'estudos' && action === 'finish') {
     const result = await finishStudySession();
     await interaction.editReply(result
-      ? { embeds: [momozinEmbed({ title: withEmoji('estudos', 'book', 'Estudo finalizado'), description: `${getText('study_finished_message', 'Kaiki estudou bonito e o Momozin ficou orgulhoso.')}\n+${result.coinsAwarded} MomoCoins • Saldo ${result.balance}`, image: getAssetPublicUrl('study_banner') })] }
+      ? { embeds: [momozinEmbed({ title: 'Estudo finalizado', description: `${getText('study_finished_message', 'Sessão finalizada com carinho. O Momozin ficou orgulhoso do foco do casal.')}\n+${result.coinsAwarded} MomoCoins • Saldo ${result.balance}`, image: getAssetPublicUrl('study_banner') })] }
       : { content: withEmoji('estudos', 'book', getText('study_not_open', 'Não tem sessão de estudo aberta para finalizar.')) });
     return;
   }
@@ -171,10 +176,10 @@ async function handlePanelButton(interaction) {
 
   if (areaId === 'mimos' && action === 'shop') {
     await interaction.editReply({ embeds: [momozinEmbed({
-      title: withEmoji('mimos', 'gift', 'Loja de Mimos'),
+      title: 'Loja de Mimos',
       description: getText('gifts_shop_description', 'Troque MomoCoins por recompensas fofas, caóticas e aprovadas pelo departamento azul.'),
       image: getAssetPublicUrl('gifts_banner'),
-      fields: giftsCatalog.map((gift) => ({ name: `${gift.label} — ${gift.cost} moedas`, value: gift.description, inline: false })),
+      fields: giftsCatalog.map((gift) => ({ name: `${gift.labelText} — ${gift.cost} moedas`, value: gift.description, inline: false })),
     })], components: giftButtons() });
     return;
   }
@@ -183,11 +188,17 @@ async function handlePanelButton(interaction) {
     const balance = await getCoins();
     const transactions = await getRecentCoinTransactions(5);
     await interaction.editReply({ embeds: [momozinEmbed({
-      title: withEmoji('momocoins', 'coin', 'Cofrinho Momozin'),
+      title: 'Cofrinho Momozin',
       description: `Saldo atual: **${balance} MomoCoins**.`,
       image: getAssetPublicUrl('coins_banner'),
       fields: [{ name: 'Últimas movimentações', value: formatCoinTransactions(transactions), inline: false }],
     })] });
+    return;
+  }
+
+  if (areaId === 'perfil' && action === 'pudinzinho') {
+    const result = await givePudinzinhoRole(interaction);
+    await interaction.editReply({ content: result.message });
     return;
   }
 
@@ -216,13 +227,13 @@ async function handleManualButton(interaction) {
 
 async function handleAdminButton(interaction) {
   console.log(`Botão recebido: admin | customId: ${interaction.customId}`);
-  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+  if (!canUseAdmin(interaction)) {
     await interaction.reply({ content: withEmoji('feedback', 'warning', 'Apenas administradores podem usar esse painel.'), ephemeral: true });
     return;
   }
 
   const tab = interaction.customId.split(':')[1] || 'sistema';
-  await interaction.update({ embeds: [await createAdminEmbed(tab)], components: createAdminRows(tab === 'diagnostico' ? 'sistema' : tab) });
+  await interaction.update({ embeds: [await createAdminEmbed(tab, interaction)], components: createAdminRows(tab === 'diagnostico' ? 'sistema' : tab) });
 }
 
 async function handleGiftButton(interaction) {
@@ -237,7 +248,7 @@ async function handleGiftButton(interaction) {
     await interaction.editReply(withEmoji('mimos', 'gift', getText('gift_not_found', 'Item não encontrado na lojinha.')));
     return;
   }
-  await interaction.editReply({ embeds: [momozinEmbed({ title: withEmoji('mimos', 'gift', 'Mimo comprado'), description: `${result.item.label} ${getText('gift_bought', 'resgatado com sucesso!')}\nSaldo restante: ${result.balance} MomoCoins`, image: getAssetPublicUrl('gifts_banner') })] });
+  await interaction.editReply({ embeds: [momozinEmbed({ title: 'Mimo comprado', description: `${result.item.labelText} ${getText('gift_bought', 'resgatado com sucesso!')}\nSaldo restante: ${result.balance} MomoCoins`, image: getAssetPublicUrl('gifts_banner') })] });
 }
 
 async function handleModalSubmit(interaction) {
@@ -246,13 +257,13 @@ async function handleModalSubmit(interaction) {
 
   if (areaId === 'recados' && action === 'add') {
     await addLoveNote(interaction.fields.getTextInputValue('text'));
-    await interaction.editReply({ embeds: [momozinEmbed({ title: withEmoji('recados', 'letter', 'Recado salvo'), description: getText('recado_saved', 'O Momozin guardou essa frase no potinho azul.'), image: getAssetPublicUrl('love_notes_banner') })] });
+    await interaction.editReply({ embeds: [momozinEmbed({ title: 'Recado salvo', description: getText('recado_saved', 'O Momozin guardou essa frase no potinho azul.'), image: getAssetPublicUrl('love_notes_banner') })] });
     return;
   }
 
   if (areaId === 'memorias' && action === 'add') {
     await addMemory(interaction.fields.getTextInputValue('title'), interaction.fields.getTextInputValue('description'), interaction.fields.getTextInputValue('date'));
-    await interaction.editReply({ embeds: [momozinEmbed({ title: withEmoji('memorias', 'photo', 'Memória salva'), description: getText('memoria_saved', 'Essa memória foi colocada no mural azul do Momozin.'), image: getAssetPublicUrl('memories_banner') })] });
+    await interaction.editReply({ embeds: [momozinEmbed({ title: 'Memória salva', description: getText('memoria_saved', 'Essa memória foi colocada no mural azul do Momozin.'), image: getAssetPublicUrl('memories_banner') })] });
     return;
   }
 
@@ -270,7 +281,7 @@ async function handleModalSubmit(interaction) {
 
     await addMovie(name, type, platform, triviaRating, kaikiRating, 'Registrado pelo painel do Momozin.');
     await interaction.editReply({ embeds: [momozinEmbed({
-      title: withEmoji('cine', 'movie', 'CineMomozin atualizado'),
+      title: 'CineMomozin atualizado',
       description: `${name} ${getText('cine_saved', 'entrou para a listinha azul do casal.')}`,
       image: getAssetPublicUrl('cine_banner'),
       fields: [
@@ -284,7 +295,7 @@ async function handleModalSubmit(interaction) {
 
   if (areaId === 'playlist' && action === 'set') {
     await setPlaylist(interaction.fields.getTextInputValue('link'));
-    await interaction.editReply({ embeds: [momozinEmbed({ title: withEmoji('playlist', 'music', 'Playlist salva'), description: getText('playlist_saved', 'Link guardado. Sem Spotify API por enquanto, só o aconchego manual.'), image: getAssetPublicUrl('playlist_banner') })] });
+    await interaction.editReply({ embeds: [momozinEmbed({ title: 'Playlist salva', description: getText('playlist_saved', 'Link guardado. Sem Spotify API por enquanto, só o aconchego manual.'), image: getAssetPublicUrl('playlist_banner') })] });
     return;
   }
 
@@ -292,7 +303,7 @@ async function handleModalSubmit(interaction) {
     const key = interaction.fields.getTextInputValue('item').trim().toLowerCase().replace(/\s+/g, '_');
     const result = await buyGift(key);
     await interaction.editReply(result.ok
-      ? { embeds: [momozinEmbed({ title: withEmoji('mimos', 'gift', 'Mimo comprado'), description: `${result.item.label} ${getText('gift_bought', 'resgatado com sucesso!')}\nSaldo restante: ${result.balance} MomoCoins`, image: getAssetPublicUrl('gifts_banner') })] }
+      ? { embeds: [momozinEmbed({ title: 'Mimo comprado', description: `${result.item.labelText} ${getText('gift_bought', 'resgatado com sucesso!')}\nSaldo restante: ${result.balance} MomoCoins`, image: getAssetPublicUrl('gifts_banner') })] }
       : { content: withEmoji('mimos', 'gift', result.reason === 'no_coins' ? getText('gift_no_coins', 'Ainda faltam MomoCoins para comprar este mimo.') : getText('gift_not_found', 'Item não encontrado na lojinha.')) });
   }
 }

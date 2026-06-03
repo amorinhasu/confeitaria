@@ -25,7 +25,7 @@ module.exports = {
 
     if (subcommand === 'loja') {
       await respond(interaction, { embeds: [momozinEmbed({
-        title: withEmoji('mimos', 'gift', 'Loja de Mimos'),
+        title: 'Loja de Mimos',
         description: getText('gifts_shop_description', 'Troque MomoCoins por recompensas fofas, caóticas e aprovadas pelo departamento azul.'),
         fields: giftsCatalog.map((gift) => ({ name: `${gift.label} — ${gift.cost} moedas`, value: gift.description, inline: false })),
       })] });
@@ -46,8 +46,8 @@ module.exports = {
     }
 
     await respond(interaction, { embeds: [momozinEmbed({
-      title: withEmoji('mimos', 'gift', 'Mimo comprado'),
-      description: `${result.item.label} ${getText('gift_bought', 'resgatado com sucesso!')}`,
+      title: 'Mimo comprado',
+      description: `${result.item.labelText} ${getText('gift_bought', 'resgatado com sucesso!')}`,
       fields: [{ name: 'Saldo restante', value: `${result.balance} MomoCoins`, inline: true }],
     })] });
   },

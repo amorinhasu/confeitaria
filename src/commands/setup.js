@@ -1,6 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { saveCoupleSetup } = require('../database/repositories');
-const { withEmoji } = require('../utils/emojis');
 const { respond } = require('../utils/interactions');
 const { momozinEmbed } = require('../utils/theme');
 
@@ -21,7 +20,7 @@ module.exports = {
     console.log('Casal registrado');
 
     await respond(interaction, { embeds: [momozinEmbed({
-      title: withEmoji('perfil', 'couple', 'Casal registrado'),
+      title: 'Casal registrado',
       description: `O cantinho azul agora reconhece ${trivia} e ${kaiki} como os donos da confeitaria Momozin.`,
       fields: [
         { name: 'Trívia', value: `${trivia}`, inline: true },

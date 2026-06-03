@@ -10,7 +10,8 @@
     "start": "node src/index.js",
     "start:auto-deploy": "AUTO_DEPLOY_COMMANDS=true node src/index.js",
     "emojis": "node src/list-emojis.js",
-    "test:manual": "node scripts/check-manual-custom-ids.js"
+    "test:manual": "node scripts/check-manual-custom-ids.js",
+    "test:pudinzinho": "node scripts/check-pudinzinho-role-flow.js"
   },
   "keywords": [
     "discord",

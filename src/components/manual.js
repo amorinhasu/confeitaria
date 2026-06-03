@@ -1,7 +1,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { giftsCatalog } = require('../database/repositories');
 const { getAssetPublicUrl } = require('../utils/assets');
-const { buttonEmoji, withEmoji } = require('../utils/emojis');
+const { buttonEmoji } = require('../utils/emojis');
 const { momozinEmbed } = require('../utils/theme');
 
 function giftCostList() {
@@ -250,7 +250,7 @@ const manualPages = [
     banner: 'study_banner',
     description: [
       '**O que essa área faz:**',
-      'Acompanha sessões de foco do Kaiki e transforma estudo em MomoCoins.',
+      'Acompanha sessões de foco da Trívia e do Kaiki, transformando estudo em MomoCoins.',
       '',
       '**Como usar pelo painel:**',
       '1. Clique em **Estudos**.',
@@ -435,7 +435,7 @@ function makeButton(id, label, category, key, style = ButtonStyle.Primary) {
 function createManualPageEmbed(pageId = 'home') {
   const page = manualPageMap.get(pageId) || manualPageMap.get('home');
   return momozinEmbed({
-    title: withEmoji(page.emojiCategory, page.emojiKey, page.title),
+    title: page.title,
     description: page.description,
     image: getAssetPublicUrl(page.banner),
   });
