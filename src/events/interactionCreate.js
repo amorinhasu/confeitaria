@@ -63,7 +63,7 @@ async function safeReply(interaction, payload, ephemeral = true) {
 }
 
 async function denyUnauthorized(interaction) {
-  await respondEphemeral(interaction, withEmoji('feedback', 'warning', 'Esse cantinho é reservado para a Trívia e o Kaiki. Se ainda não configurou, use `/setup casal`.'));
+  await respondEphemeral(interaction, withEmoji('feedback', 'warning', 'Esse cantinho é reservado para a Trívia e o Kaiki.'));
 }
 
 async function ensureAuthorized(interaction) {

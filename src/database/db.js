@@ -75,14 +75,6 @@ async function migrate() {
       achievements TEXT NOT NULL DEFAULT 'Sobreviver a saudade; Maratonar juntinhos; Estudar sem surtar; Farmar MomoCoins'
     );
 
-    CREATE TABLE IF NOT EXISTS couple_setup (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      trivia_id TEXT NOT NULL,
-      kaiki_id TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-
     CREATE TABLE IF NOT EXISTS love_notes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       text TEXT NOT NULL,
@@ -144,6 +136,7 @@ async function migrate() {
     );
   `);
 
+  await exec('DROP TABLE IF EXISTS couple_setup');
   await run('INSERT OR IGNORE INTO couple_profile (id) VALUES (1)');
   await run('INSERT OR IGNORE INTO coins (id, balance) VALUES (1, 0)');
 }

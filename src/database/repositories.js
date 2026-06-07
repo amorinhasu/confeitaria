@@ -31,10 +31,6 @@ const INITIAL_DATING_MEMORY = {
 
 const INITIAL_DATING_ACHIEVEMENT = 'Pedido de namoro no Roblox em 03/06';
 
-async function ensureEnvironmentCoupleSetup(triviaId, kaikiId) {
-  if (!triviaId || !kaikiId) return null;
-  return saveCoupleSetup(triviaId, kaikiId);
-}
 
 async function ensureInitialCoupleMemory() {
   await db.ready;
@@ -49,24 +45,6 @@ async function ensureInitialCoupleMemory() {
     const updatedAchievements = achievements ? `${achievements}; ${INITIAL_DATING_ACHIEVEMENT}` : INITIAL_DATING_ACHIEVEMENT;
     await db.run('UPDATE couple_profile SET achievements = ? WHERE id = 1', [updatedAchievements]);
   }
-}
-
-async function getCoupleSetup() {
-  await db.ready;
-  return db.get('SELECT * FROM couple_setup WHERE id = 1');
-}
-
-async function saveCoupleSetup(triviaId, kaikiId) {
-  await db.ready;
-  await db.run(`
-    INSERT INTO couple_setup (id, trivia_id, kaiki_id, created_at, updated_at)
-    VALUES (1, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-    ON CONFLICT(id) DO UPDATE SET
-      trivia_id = excluded.trivia_id,
-      kaiki_id = excluded.kaiki_id,
-      updated_at = CURRENT_TIMESTAMP
-  `, [triviaId, kaikiId]);
-  return getCoupleSetup();
 }
 
 async function getProfile() {
@@ -234,10 +212,7 @@ async function buyGift(key) {
 module.exports = {
   giftsCatalog,
   INITIAL_DATING_MEMORY,
-  ensureEnvironmentCoupleSetup,
   ensureInitialCoupleMemory,
-  getCoupleSetup,
-  saveCoupleSetup,
   getProfile,
   addLoveNote,
   getRandomLoveNote,

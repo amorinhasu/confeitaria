@@ -13,7 +13,6 @@ const {
   countMemories,
   countMovies,
   getCoins,
-  getCoupleSetup,
   getProfile,
 } = require('../database/repositories');
 
@@ -95,23 +94,19 @@ function createSystemEmbed() {
 }
 
 async function createConfigurationEmbed() {
-  const setup = await getCoupleSetup();
   const profile = await getProfile();
-  const configured = Boolean(setup);
-  const formattedDate = setup?.created_at ? new Date(`${setup.created_at}Z`).toLocaleDateString('pt-BR') : 'Não configurado';
+  const idsConfigured = Boolean(triviaUserId && kaikiUserId);
 
   return momozinEmbed({
     title: getText('admin_config_title', 'Painel Administrativo — Configuração'),
     description: [
-      `Status: ${configured ? 'Configurado ✅' : 'Pendente ⚠️'}`,
+      `IDs do casal no .env: ${idsConfigured ? 'definidos ✅' : 'pendentes ⚠️'}`,
       '',
-      `Trívia:\n${setup?.trivia_id ? `<@${setup.trivia_id}>` : 'Não configurada'}`,
+      `Trívia:\n${triviaUserId ? `<@${triviaUserId}>` : 'TRIVIA_USER_ID não definido'}`,
       '',
-      `Kaiki:\n${setup?.kaiki_id ? `<@${setup.kaiki_id}>` : 'Não configurado'}`,
+      `Kaiki:\n${kaikiUserId ? `<@${kaikiUserId}>` : 'KAIKI_USER_ID não definido'}`,
       '',
-      `IDs registrados:\n${setup ? `${setup.trivia_id} / ${setup.kaiki_id}` : 'Nenhum ID salvo'}`,
-      '',
-      `Data:\n${formattedDate}`,
+      `IDs carregados:\n${triviaUserId || 'sem TRIVIA_USER_ID'} / ${kaikiUserId || 'sem KAIKI_USER_ID'}`,
       '',
       `Status do casal:\n${profile?.status || 'Não encontrado'}`,
     ].join('\n'),
@@ -164,8 +159,7 @@ function createManualAdminEmbed() {
 }
 
 async function createDatabaseEmbed() {
-  const [setup, notes, memories, movies, balance, gifts] = await Promise.all([
-    getCoupleSetup(),
+  const [notes, memories, movies, balance, gifts] = await Promise.all([
     countLoveNotes(),
     countMemories(),
     countMovies(),
@@ -176,8 +170,7 @@ async function createDatabaseEmbed() {
   return momozinEmbed({
     title: getText('admin_database_title', 'Painel Administrativo — Banco'),
     description: [
-      `Casal configurado: ${setup ? '✅' : '⚠️'}`,
-      `IDs registrados: ${setup ? `${setup.trivia_id} / ${setup.kaiki_id}` : 'não configurado'}`,
+      `IDs do casal carregados do .env: ${triviaUserId || 'sem TRIVIA_USER_ID'} / ${kaikiUserId || 'sem KAIKI_USER_ID'}`,
       `Quantidade de recados: ${notes}`,
       `Quantidade de memórias: ${memories}`,
       `Quantidade de filmes: ${movies}`,
@@ -191,11 +184,8 @@ async function createDiagnosticEmbed() {
   const problems = [];
   const assets = getAssetStatusEntries();
   const emojis = getEmojiStatusEntries();
-  const setup = await getCoupleSetup();
-
   assets.filter((asset) => asset.status !== 'ok').forEach((asset) => problems.push(`⚠️ asset ${asset.key}: ${asset.text}`));
   emojis.filter((item) => item.status !== 'ok').forEach((item) => problems.push(`⚠️ emoji ${item.category}.${item.key}: fallback Unicode`));
-  if (!setup) problems.push('⚠️ casal ainda não configurado com /setup casal');
   if (manualPages.length < 9) problems.push('⚠️ manual com páginas incompletas');
 
   return momozinEmbed({
@@ -207,8 +197,7 @@ async function createDiagnosticEmbed() {
 
 
 async function createAuditEmbed(interaction) {
-  const [setup, notes, memories, movies, balance, gifts] = await Promise.all([
-    getCoupleSetup(),
+  const [notes, memories, movies, balance, gifts] = await Promise.all([
     countLoveNotes(),
     countMemories(),
     countMovies(),
@@ -226,9 +215,9 @@ async function createAuditEmbed(interaction) {
   return momozinEmbed({
     title: getText('audit_title', 'Auditoria do Momozin'),
     description: [
-      `Casal configurado: ${setup ? 'sim' : 'não'}`,
-      `IDs no banco: ${setup ? `${setup.trivia_id} / ${setup.kaiki_id}` : 'não configurado'}`,
-      `IDs do .env: ADMIN=${adminUserId || 'não definido'} | TRIVIA=${triviaUserId || 'não definido'} | KAIKI=${kaikiUserId || 'não definido'}`,
+      `IDs do casal definidos no .env: ${triviaUserId && kaikiUserId ? 'sim' : 'não'}`,
+      `IDs carregados: TRIVIA=${triviaUserId || 'não definido'} | KAIKI=${kaikiUserId || 'não definido'}`,
+      `Admin carregado: ${adminUserId || 'não definido'}`,
       'Banco SQLite: acessível',
       `Recados: ${notes}`,
       `Memórias: ${memories}`,
