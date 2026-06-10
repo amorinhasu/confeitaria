@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { addLoveNote, getRandomLoveNote } = require('../database/repositories');
 const { getAssetPublicUrl } = require('../utils/assets');
+const { publishLoveNoteReadDiaryEntry, publishLoveNoteSavedDiaryEntry } = require('../utils/diary');
 const { withEmoji } = require('../utils/emojis');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
@@ -24,6 +25,7 @@ module.exports = {
       const text = interaction.options.getString('texto', true);
       await addLoveNote(text);
       await respond(interaction, { embeds: [momozinEmbed({ title: 'Recado salvo', description: getText('recado_saved', 'O Momozin guardou essa frase no potinho azul.'), image: getAssetPublicUrl('love_notes_banner') })] });
+      await publishLoveNoteSavedDiaryEntry(interaction, text);
       return;
     }
 
@@ -34,5 +36,6 @@ module.exports = {
     }
 
     await respond(interaction, { embeds: [momozinEmbed({ title: 'Frase do dia', description: note.text, image: getAssetPublicUrl('love_notes_banner') })] });
+    await publishLoveNoteReadDiaryEntry(interaction, note);
   },
 };

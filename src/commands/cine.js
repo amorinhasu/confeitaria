@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { addMovie } = require('../database/repositories');
 const { getAssetPublicUrl } = require('../utils/assets');
+const { publishDiaryEmbed } = require('../utils/channels');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
 const { respond } = require('../utils/interactions');
@@ -28,7 +29,7 @@ module.exports = {
 
     await addMovie(name, type, platform, triviaRating, kaikiRating, comment);
 
-    await respond(interaction, { embeds: [momozinEmbed({
+    const embedPayload = {
       title: 'CineMomozin atualizado',
       description: `${name} ${getText('cine_saved', 'entrou para a listinha azul do casal.')}`,
       image: getAssetPublicUrl('cine_banner'),
@@ -38,6 +39,8 @@ module.exports = {
         { name: 'Notas', value: `Trívia: ${triviaRating}/10\nKaiki: ${kaikiRating}/10`, inline: true },
         { name: 'Comentário', value: comment, inline: false },
       ],
-    })] });
+    };
+    await respond(interaction, { embeds: [momozinEmbed(embedPayload)] });
+    await publishDiaryEmbed(interaction, { ...embedPayload, title: `CineMomozin: ${name}` });
   },
 };

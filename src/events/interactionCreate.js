@@ -7,6 +7,7 @@ const {
   addLoveNote,
   addMemory,
   addMovie,
+  updateMemoryImage,
   buyGift,
   countLoveNotes,
   finishStudySession,
@@ -24,13 +25,121 @@ const {
 } = require('../database/repositories');
 const { getAssetPublicUrl } = require('../utils/assets');
 const { isAdminUser, isAuthorizedCouple } = require('../utils/authorization');
+const { enforceCommandsChannel, publishDiaryEmbed } = require('../utils/channels');
 const { formatCoinTransactions } = require('../utils/coins');
 const { profileEmbed, studyStatsEmbed } = require('../utils/embeds');
+const { publishLoveNoteReadDiaryEntry, publishLoveNoteSavedDiaryEntry, publishPudinzinhoLetterDiaryEntry } = require('../utils/diary');
+const { createPudinzinhoLetterEmbed } = require('../utils/pudinzinhoLetter');
 const { givePudinzinhoRole } = require('../utils/pudinzinhoRole');
 const { buttonEmoji, withEmoji } = require('../utils/emojis');
+const { getImageAttachmentUrl } = require('../utils/images');
 const { respondEphemeral, scheduleDefer } = require('../utils/interactions');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
+
+
+
+async function publishMemoryDiaryEntry(interaction, memory) {
+  await publishDiaryEmbed(interaction, {
+    title: `Memória registrada: ${memory.title}`,
+    description: `Data: ${memory.memory_date}
+
+${memory.description}`,
+    image: memory.image_url || getAssetPublicUrl('memories_banner'),
+  });
+}
+
+async function publishMovieDiaryEntry(interaction, movie) {
+  await publishDiaryEmbed(interaction, {
+    title: `CineMomozin: ${movie.name}`,
+    description: movie.comment || 'Novo filme/série registrado no CineMomozin.',
+    image: getAssetPublicUrl('cine_banner'),
+    fields: [
+      { name: 'Tipo', value: movie.type, inline: true },
+      { name: 'Plataforma', value: movie.platform, inline: true },
+      { name: 'Notas', value: `Trívia: ${movie.triviaRating}/10
+Kaiki: ${movie.kaikiRating}/10`, inline: true },
+    ],
+  });
+}
+
+async function publishPlaylistDiaryEntry(interaction, link) {
+  await publishDiaryEmbed(interaction, {
+    title: 'Playlist atualizada',
+    description: link,
+    image: getAssetPublicUrl('playlist_banner'),
+  });
+}
+
+async function publishCoinsDiaryEntry(interaction, { title, description }) {
+  await publishDiaryEmbed(interaction, { title, description, image: getAssetPublicUrl('coins_banner') });
+}
+
+async function publishGiftDiaryEntry(interaction, result) {
+  await publishDiaryEmbed(interaction, {
+    title: 'Mimo comprado',
+    description: `${result.item.labelText} ${getText('gift_bought', 'resgatado com sucesso!')}
+Saldo restante: ${result.balance} MomoCoins`,
+    image: getAssetPublicUrl('gifts_banner'),
+  });
+}
+
+async function publishAchievementDiaryEntry(interaction, { title, description }) {
+  await publishDiaryEmbed(interaction, { title, description, image: getAssetPublicUrl('profile_banner') });
+}
+
+function createMemoryEmbed(memory, useBannerFallback = false) {
+  return momozinEmbed({
+    title: memory.title,
+    description: `Data: ${memory.memory_date}\n\n${memory.description}`,
+    image: memory.image_url || (useBannerFallback ? getAssetPublicUrl('memories_banner') : undefined),
+  });
+}
+
+function createMemoryListPayload(memories) {
+  if (!memories.length) {
+    return { embeds: [momozinEmbed({ title: 'Últimas memórias', description: 'Ainda não tem memórias no mural azul.', image: getAssetPublicUrl('memories_banner') })] };
+  }
+
+  if (!memories.some((memory) => memory.image_url)) {
+    return { embeds: [momozinEmbed({
+      title: 'Últimas memórias',
+      description: memories.map((memory) => `**${memory.title}** (${memory.memory_date})\n${memory.description}`).join('\n\n'),
+      image: getAssetPublicUrl('memories_banner'),
+    })] };
+  }
+
+  return { embeds: memories.slice(0, 5).map((memory) => createMemoryEmbed(memory, true)) };
+}
+
+async function collectOptionalMemoryImage(interaction, memoryId, memoryData) {
+  if (!interaction.channel?.awaitMessages) {
+    await publishMemoryDiaryEntry(interaction, memoryData);
+    return;
+  }
+
+  let imageUrl = null;
+
+  const filter = (message) => {
+    if (message.author.id !== interaction.user.id) return false;
+    return message.attachments.some((attachment) => Boolean(getImageAttachmentUrl(attachment)));
+  };
+
+  try {
+    const collected = await interaction.channel.awaitMessages({ filter, max: 1, time: 60000, errors: ['time'] });
+    const message = collected.first();
+    const attachment = message?.attachments.find((item) => Boolean(getImageAttachmentUrl(item)));
+    imageUrl = getImageAttachmentUrl(attachment);
+    if (!imageUrl) return;
+
+    await updateMemoryImage(memoryId, imageUrl);
+    await interaction.followUp({ content: 'Imagem anexada à memória com sucesso.', ephemeral: true });
+  } catch {
+    // Imagem é opcional. Se não chegar em 60s, a memória continua salva sem imagem.
+  }
+
+  await publishMemoryDiaryEntry(interaction, { ...memoryData, image_url: imageUrl });
+}
 
 function parseModalRating(value) {
   const normalized = value.trim().replace(',', '.');
@@ -116,6 +225,7 @@ async function handlePanelButton(interaction) {
     await interaction.editReply(note
       ? { embeds: [momozinEmbed({ title: 'Frase do dia', description: note.text, image: getAssetPublicUrl('love_notes_banner') })] }
       : { content: withEmoji('recados', 'letter', getText('recado_empty', 'Ainda não tem recados salvos. Use `/recado adicionar` primeiro.')) });
+    if (note) await publishLoveNoteReadDiaryEntry(interaction, note);
     return;
   }
 
@@ -127,11 +237,7 @@ async function handlePanelButton(interaction) {
 
   if (areaId === 'memorias' && action === 'list') {
     const memories = await listMemories(5);
-    await interaction.editReply({ embeds: [momozinEmbed({
-      title: 'Últimas memórias',
-      description: memories.length ? memories.map((memory) => `**${memory.title}** (${memory.memory_date})\n${memory.description}`).join('\n\n') : 'Ainda não tem memórias no mural azul.',
-      image: getAssetPublicUrl('memories_banner'),
-    })] });
+    await interaction.editReply(createMemoryListPayload(memories));
     return;
   }
 
@@ -166,6 +272,7 @@ async function handlePanelButton(interaction) {
     await interaction.editReply(result
       ? { embeds: [momozinEmbed({ title: 'Estudo finalizado', description: `${getText('study_finished_message', 'Sessão finalizada com carinho. O Momozin ficou orgulhoso do foco do casal.')}\n+${result.coinsAwarded} MomoCoins • Saldo ${result.balance}`, image: getAssetPublicUrl('study_banner') })] }
       : { content: withEmoji('estudos', 'book', getText('study_not_open', 'Não tem sessão de estudo aberta para finalizar.')) });
+    if (result) await publishCoinsDiaryEntry(interaction, { title: 'MomoCoins por estudo', description: `+${result.coinsAwarded} MomoCoins por ${result.minutes} minuto(s) de foco.\nSaldo atual: ${result.balance} MomoCoins.` });
     return;
   }
 
@@ -198,6 +305,13 @@ async function handlePanelButton(interaction) {
 
   if (areaId === 'perfil' && action === 'pudinzinho') {
     const result = await givePudinzinhoRole(interaction);
+    if (result.ok && result.code === 'added') {
+      await interaction.editReply({ content: result.message, embeds: [createPudinzinhoLetterEmbed()] });
+      await publishAchievementDiaryEntry(interaction, { title: 'Cargo Pudinzinho recebido', description: 'Kaiki recebeu o cargo Pudinzinho no Momozin pela primeira vez.' });
+      await publishPudinzinhoLetterDiaryEntry(interaction);
+      return;
+    }
+
     await interaction.editReply({ content: result.message });
     return;
   }
@@ -249,6 +363,7 @@ async function handleGiftButton(interaction) {
     return;
   }
   await interaction.editReply({ embeds: [momozinEmbed({ title: 'Mimo comprado', description: `${result.item.labelText} ${getText('gift_bought', 'resgatado com sucesso!')}\nSaldo restante: ${result.balance} MomoCoins`, image: getAssetPublicUrl('gifts_banner') })] });
+  await publishGiftDiaryEntry(interaction, result);
 }
 
 async function handleModalSubmit(interaction) {
@@ -256,14 +371,26 @@ async function handleModalSubmit(interaction) {
   const [, areaId, action] = interaction.customId.split(':');
 
   if (areaId === 'recados' && action === 'add') {
-    await addLoveNote(interaction.fields.getTextInputValue('text'));
+    const text = interaction.fields.getTextInputValue('text');
+    await addLoveNote(text);
     await interaction.editReply({ embeds: [momozinEmbed({ title: 'Recado salvo', description: getText('recado_saved', 'O Momozin guardou essa frase no potinho azul.'), image: getAssetPublicUrl('love_notes_banner') })] });
+    await publishLoveNoteSavedDiaryEntry(interaction, text);
     return;
   }
 
   if (areaId === 'memorias' && action === 'add') {
-    await addMemory(interaction.fields.getTextInputValue('title'), interaction.fields.getTextInputValue('description'), interaction.fields.getTextInputValue('date'));
-    await interaction.editReply({ embeds: [momozinEmbed({ title: 'Memória salva', description: getText('memoria_saved', 'Essa memória foi colocada no mural azul do Momozin.'), image: getAssetPublicUrl('memories_banner') })] });
+    const title = interaction.fields.getTextInputValue('title');
+    const description = interaction.fields.getTextInputValue('description');
+    const memoryDate = interaction.fields.getTextInputValue('date');
+    const result = await addMemory(title, description, memoryDate);
+    await interaction.editReply({ embeds: [momozinEmbed({
+      title: 'Memória salva',
+      description: `${getText('memoria_saved', 'Essa memória foi colocada no mural azul do Momozin.')}
+
+Se quiser anexar uma imagem, envie um PNG, JPG, GIF ou WEBP neste canal em até 60 segundos. Se não enviar nada, a memória fica salva sem imagem mesmo.`,
+      image: getAssetPublicUrl('memories_banner'),
+    })] });
+    collectOptionalMemoryImage(interaction, result.lastID, { title, description, memory_date: memoryDate }).catch((error) => console.error('Erro ao anexar imagem na memória:', error));
     return;
   }
 
@@ -279,7 +406,8 @@ async function handleModalSubmit(interaction) {
       return;
     }
 
-    await addMovie(name, type, platform, triviaRating, kaikiRating, 'Registrado pelo painel do Momozin.');
+    const comment = 'Registrado pelo painel do Momozin.';
+    await addMovie(name, type, platform, triviaRating, kaikiRating, comment);
     await interaction.editReply({ embeds: [momozinEmbed({
       title: 'CineMomozin atualizado',
       description: `${name} ${getText('cine_saved', 'entrou para a listinha azul do casal.')}`,
@@ -290,12 +418,15 @@ async function handleModalSubmit(interaction) {
         { name: 'Notas', value: `Trívia: ${triviaRating}/10\nKaiki: ${kaikiRating}/10`, inline: true },
       ],
     })] });
+    await publishMovieDiaryEntry(interaction, { name, type, platform, triviaRating, kaikiRating, comment });
     return;
   }
 
   if (areaId === 'playlist' && action === 'set') {
-    await setPlaylist(interaction.fields.getTextInputValue('link'));
+    const link = interaction.fields.getTextInputValue('link');
+    await setPlaylist(link);
     await interaction.editReply({ embeds: [momozinEmbed({ title: 'Playlist salva', description: getText('playlist_saved', 'Link guardado. Sem Spotify API por enquanto, só o aconchego manual.'), image: getAssetPublicUrl('playlist_banner') })] });
+    await publishPlaylistDiaryEntry(interaction, link);
     return;
   }
 
@@ -305,6 +436,7 @@ async function handleModalSubmit(interaction) {
     await interaction.editReply(result.ok
       ? { embeds: [momozinEmbed({ title: 'Mimo comprado', description: `${result.item.labelText} ${getText('gift_bought', 'resgatado com sucesso!')}\nSaldo restante: ${result.balance} MomoCoins`, image: getAssetPublicUrl('gifts_banner') })] }
       : { content: withEmoji('mimos', 'gift', result.reason === 'no_coins' ? getText('gift_no_coins', 'Ainda faltam MomoCoins para comprar este mimo.') : getText('gift_not_found', 'Item não encontrado na lojinha.')) });
+    if (result.ok) await publishGiftDiaryEntry(interaction, result);
   }
 }
 
@@ -322,6 +454,7 @@ module.exports = {
 
       let cancelDefer = () => {};
       try {
+        if (!(await enforceCommandsChannel(interaction))) return;
         if (commandName !== 'admin' && !(await ensureAuthorized(interaction))) return;
         cancelDefer = scheduleDefer(interaction, commandName);
         await command.execute(interaction);
@@ -336,6 +469,7 @@ module.exports = {
     }
 
     try {
+      if (!(await enforceCommandsChannel(interaction))) return;
       if (interaction.isButton() && interaction.customId.startsWith('admin:')) return await handleAdminButton(interaction);
       if ((interaction.isButton() || interaction.isModalSubmit()) && !(await ensureAuthorized(interaction))) return;
       if (interaction.isButton() && interaction.customId.startsWith('panel:')) return await handlePanelButton(interaction);

@@ -1,5 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { buyGift, giftsCatalog } = require('../database/repositories');
+const { getAssetPublicUrl } = require('../utils/assets');
+const { publishDiaryEmbed } = require('../utils/channels');
 const { withEmoji } = require('../utils/emojis');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
@@ -45,10 +47,13 @@ module.exports = {
       return;
     }
 
-    await respond(interaction, { embeds: [momozinEmbed({
+    const embedPayload = {
       title: 'Mimo comprado',
       description: `${result.item.labelText} ${getText('gift_bought', 'resgatado com sucesso!')}`,
+      image: getAssetPublicUrl('gifts_banner'),
       fields: [{ name: 'Saldo restante', value: `${result.balance} MomoCoins`, inline: true }],
-    })] });
+    };
+    await respond(interaction, { embeds: [momozinEmbed(embedPayload)] });
+    await publishDiaryEmbed(interaction, embedPayload);
   },
 };

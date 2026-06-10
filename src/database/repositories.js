@@ -86,9 +86,14 @@ async function countGifts() {
   return row?.total ?? 0;
 }
 
-async function addMemory(title, description, date) {
+async function addMemory(title, description, date, imageUrl = null) {
   await db.ready;
-  return db.run('INSERT INTO memories (title, description, memory_date) VALUES (?, ?, ?)', [title, description, date]);
+  return db.run('INSERT INTO memories (title, description, memory_date, image_url) VALUES (?, ?, ?, ?)', [title, description, date, imageUrl]);
+}
+
+async function updateMemoryImage(memoryId, imageUrl) {
+  await db.ready;
+  return db.run('UPDATE memories SET image_url = ? WHERE id = ?', [imageUrl, memoryId]);
 }
 
 async function listMemories(limit = 5) {
@@ -221,6 +226,7 @@ module.exports = {
   countMovies,
   countGifts,
   addMemory,
+  updateMemoryImage,
   listMemories,
   addMovie,
   listMovies,

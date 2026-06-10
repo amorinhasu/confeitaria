@@ -45,9 +45,24 @@ DATABASE_URL=./data/momozin.sqlite
 AUTO_DEPLOY_COMMANDS=false
 ADMIN_USER_ID=
 TRIVIA_USER_ID=
-KAIKI_USER_ID=
-PUDINZINHO_ROLE_ID=
+KAIKI_USER_ID=993955981220388894
+PUDINZINHO_ROLE_ID=1509920102911311943
+COMMANDS_CHANNEL_ID=
+MEMORIES_CHANNEL_ID=
 ```
+
+
+## Canais de produção
+
+Configure estes IDs no `.env` para organizar o uso em produção:
+
+```env
+COMMANDS_CHANNEL_ID=
+MEMORIES_CHANNEL_ID=
+```
+
+- `COMMANDS_CHANNEL_ID` limita o uso do Momozin ao canal de comandos.
+- `MEMORIES_CHANNEL_ID` recebe publicações públicas do diário do casal: memórias, CineMomozin, playlist, MomoCoins, mimos e conquistas.
 
 ## Scripts
 
@@ -76,7 +91,7 @@ npm start
 - `/perfil` — mostra perfil do casal, apelidos, contador desde o dia 05, status e conquistas.
 - `/recado adicionar texto:` — salva uma mensagem.
 - `/recado sortear` — sorteia a frase do dia.
-- `/memoria adicionar titulo: descricao: data:` — salva memória do casal.
+- `/memoria adicionar titulo: descricao: data: imagem:` — salva memória do casal com imagem opcional.
 - `/cine adicionar nome: tipo: plataforma: nota_trivia: nota_kaiki: comentario:` — salva filme ou série assistida.
 - `/playlist definir link:` — salva o link manual da playlist.
 - `/playlist ver` — mostra o link salvo.

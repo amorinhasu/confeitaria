@@ -1,5 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { getPlaylist, setPlaylist } = require('../database/repositories');
+const { getAssetPublicUrl } = require('../utils/assets');
+const { publishDiaryEmbed } = require('../utils/channels');
 const { withEmoji } = require('../utils/emojis');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
@@ -22,7 +24,8 @@ module.exports = {
     if (subcommand === 'definir') {
       const link = interaction.options.getString('link', true);
       await setPlaylist(link);
-      await respond(interaction, { embeds: [momozinEmbed({ title: 'Playlist salva', description: getText('playlist_saved', 'Link guardado. Sem Spotify API por enquanto, só o aconchego manual.') })] });
+      await respond(interaction, { embeds: [momozinEmbed({ title: 'Playlist salva', description: getText('playlist_saved', 'Link guardado. Sem Spotify API por enquanto, só o aconchego manual.'), image: getAssetPublicUrl('playlist_banner') })] });
+      await publishDiaryEmbed(interaction, { title: 'Playlist atualizada', description: link, image: getAssetPublicUrl('playlist_banner') });
       return;
     }
 

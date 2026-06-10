@@ -86,6 +86,7 @@ async function migrate() {
       title TEXT NOT NULL,
       description TEXT NOT NULL,
       memory_date TEXT NOT NULL,
+      image_url TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -135,6 +136,11 @@ async function migrate() {
       coins_awarded INTEGER NOT NULL DEFAULT 0
     );
   `);
+
+  const memoryColumns = await all('PRAGMA table_info(memories)');
+  if (!memoryColumns.some((column) => column.name === 'image_url')) {
+    await run('ALTER TABLE memories ADD COLUMN image_url TEXT');
+  }
 
   await exec('DROP TABLE IF EXISTS couple_setup');
   await run('INSERT OR IGNORE INTO couple_profile (id) VALUES (1)');

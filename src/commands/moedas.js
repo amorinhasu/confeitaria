@@ -1,5 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { addCoins, getCoins, getRecentCoinTransactions } = require('../database/repositories');
+const { getAssetPublicUrl } = require('../utils/assets');
+const { publishDiaryEmbed } = require('../utils/channels');
 const { formatCoinTransactions } = require('../utils/coins');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
@@ -24,11 +26,14 @@ module.exports = {
       const quantity = interaction.options.getInteger('quantidade', true);
       const reason = interaction.options.getString('motivo', true);
       const balance = await addCoins(quantity, reason, 'manual_add');
-      await respond(interaction, { embeds: [momozinEmbed({
+      const embedPayload = {
         title: getText('coins_added_title', 'MomoCoins adicionadas'),
         description: `+${quantity} MomoCoins por: ${reason}`,
+        image: getAssetPublicUrl('coins_banner'),
         fields: [{ name: getText('coins_balance_prefix', 'Saldo atual'), value: `${balance} MomoCoins`, inline: true }],
-      })] });
+      };
+      await respond(interaction, { embeds: [momozinEmbed(embedPayload)] });
+      await publishDiaryEmbed(interaction, embedPayload);
       return;
     }
 

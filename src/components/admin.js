@@ -1,7 +1,8 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
 const assetsConfig = require('../../config/assets.json');
 const { getAssetPublicUrl } = require('../utils/assets');
-const { adminUserId, kaikiUserId, triviaUserId } = require('../utils/config');
+const { commandsChannelId, memoriesChannelId, adminUserId, kaikiUserId, triviaUserId } = require('../utils/config');
+const { getMemoriesChannel } = require('../utils/channels');
 const { buttonEmoji, listConfiguredEmojis } = require('../utils/emojis');
 const { momozinEmbed } = require('../utils/theme');
 const { getPudinzinhoRoleDiagnostics } = require('../utils/pudinzinhoRole');
@@ -17,6 +18,18 @@ const {
 } = require('../database/repositories');
 
 const ADMIN_TABS = ['sistema', 'configuracao', 'emojis', 'assets', 'manual', 'banco', 'auditoria'];
+
+
+async function getChannelStatus(guild, channelId) {
+  if (!channelId) return { configured: false, found: false, textBased: false };
+
+  try {
+    const channel = await guild?.channels.fetch(channelId);
+    return { configured: true, found: Boolean(channel), textBased: Boolean(channel?.isTextBased?.()), name: channel?.name || null };
+  } catch (error) {
+    return { configured: true, found: false, textBased: false, error: error.message };
+  }
+}
 
 function statusLabel(status, text) {
   const icon = status === 'ok' ? '✅' : status === 'partial' ? '⚠️' : '❌';
@@ -69,7 +82,9 @@ function getEmojiStatusEntries() {
   }));
 }
 
-function createSystemEmbed() {
+async function createSystemEmbed(interaction = null) {
+  const commandsChannel = await getChannelStatus(interaction?.guild || null, commandsChannelId);
+  const memoriesChannel = await getChannelStatus(interaction?.guild || null, memoriesChannelId);
   const lines = [
     statusLabel('ok', 'Banco SQLite: Funcionando'),
     statusLabel('ok', 'Painel: Funcionando'),
@@ -84,6 +99,8 @@ function createSystemEmbed() {
     statusLabel('ok', 'MomoCoins: Funcionando'),
     statusLabel('ok', 'Emojis: Com fallback seguro'),
     statusLabel(getAssetStatusEntries().some((asset) => asset.status !== 'ok') ? 'partial' : 'ok', 'Assets: Revisados'),
+    statusLabel(commandsChannel.configured && commandsChannel.found && commandsChannel.textBased ? 'ok' : 'partial', `Canal de comandos: ${commandsChannelId ? `<#${commandsChannelId}>` : 'não configurado'}`),
+    statusLabel(memoriesChannel.configured && memoriesChannel.found && memoriesChannel.textBased ? 'ok' : 'partial', `Canal diário: ${memoriesChannelId ? `<#${memoriesChannelId}>` : 'não configurado'}`),
   ];
 
   return momozinEmbed({
@@ -180,13 +197,19 @@ async function createDatabaseEmbed() {
   });
 }
 
-async function createDiagnosticEmbed() {
+async function createDiagnosticEmbed(interaction = null) {
   const problems = [];
   const assets = getAssetStatusEntries();
   const emojis = getEmojiStatusEntries();
+  const commandsChannel = await getChannelStatus(interaction?.guild || null, commandsChannelId);
+  const memoriesChannel = await getChannelStatus(interaction?.guild || null, memoriesChannelId);
   assets.filter((asset) => asset.status !== 'ok').forEach((asset) => problems.push(`⚠️ asset ${asset.key}: ${asset.text}`));
   emojis.filter((item) => item.status !== 'ok').forEach((item) => problems.push(`⚠️ emoji ${item.category}.${item.key}: fallback Unicode`));
   if (manualPages.length < 9) problems.push('⚠️ manual com páginas incompletas');
+  if (!commandsChannel.configured) problems.push('⚠️ COMMANDS_CHANNEL_ID não configurado');
+  else if (!commandsChannel.found || !commandsChannel.textBased) problems.push('⚠️ COMMANDS_CHANNEL_ID inválido ou não textual');
+  if (!memoriesChannel.configured) problems.push('⚠️ MEMORIES_CHANNEL_ID não configurado');
+  else if (!memoriesChannel.found || !memoriesChannel.textBased) problems.push('⚠️ MEMORIES_CHANNEL_ID inválido ou não textual');
 
   return momozinEmbed({
     title: getText('admin_diagnostic_title', 'Diagnóstico do Momozin'),
@@ -208,6 +231,9 @@ async function createAuditEmbed(interaction) {
   const assetsWithoutUrl = getAssetStatusEntries().filter((asset) => asset.status !== 'ok').map((asset) => asset.key);
   const invalidEmojis = getEmojiStatusEntries().filter((item) => item.status !== 'ok').map((item) => `${item.category}.${item.key}`);
   const pudinzinho = await getPudinzinhoRoleDiagnostics(interaction?.guild || null);
+  const commandsChannel = await getChannelStatus(interaction?.guild || null, commandsChannelId);
+  const memoriesChannel = await getChannelStatus(interaction?.guild || null, memoriesChannelId);
+  const resolvedMemoriesChannel = await getMemoriesChannel(interaction?.guild || null);
 
   const botPermissions = interaction?.guild?.members?.me?.permissions;
   const botCanManageRoles = botPermissions ? botPermissions.has(PermissionFlagsBits.ManageRoles) : pudinzinho.botCanManageRoles;
@@ -218,6 +244,8 @@ async function createAuditEmbed(interaction) {
       `IDs do casal definidos no .env: ${triviaUserId && kaikiUserId ? 'sim' : 'não'}`,
       `IDs carregados: TRIVIA=${triviaUserId || 'não definido'} | KAIKI=${kaikiUserId || 'não definido'}`,
       `Admin carregado: ${adminUserId || 'não definido'}`,
+      `COMMANDS_CHANNEL_ID: ${commandsChannelId ? `<#${commandsChannelId}> (${commandsChannel.found && commandsChannel.textBased ? 'ok' : 'verificar'})` : 'não definido'}`,
+      `MEMORIES_CHANNEL_ID: ${memoriesChannelId ? `<#${memoriesChannelId}> (${resolvedMemoriesChannel && memoriesChannel.found && memoriesChannel.textBased ? 'ok' : 'verificar'})` : 'não definido'}`,
       'Banco SQLite: acessível',
       `Recados: ${notes}`,
       `Memórias: ${memories}`,
@@ -241,9 +269,9 @@ async function createAdminEmbed(tab = 'sistema', interaction = null) {
   if (tab === 'assets') return createAssetsEmbed();
   if (tab === 'manual') return createManualAdminEmbed();
   if (tab === 'banco') return createDatabaseEmbed();
-  if (tab === 'diagnostico') return createDiagnosticEmbed();
+  if (tab === 'diagnostico') return createDiagnosticEmbed(interaction);
   if (tab === 'auditoria') return createAuditEmbed(interaction);
-  return createSystemEmbed();
+  return createSystemEmbed(interaction);
 }
 
 module.exports = { ADMIN_TABS, createAdminEmbed, createAdminRows };

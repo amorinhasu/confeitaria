@@ -1,5 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { finishStudySession, startStudySession } = require('../database/repositories');
+const { getAssetPublicUrl } = require('../utils/assets');
+const { publishDiaryEmbed } = require('../utils/channels');
 const { formatDuration } = require('../utils/date');
 const { withEmoji } = require('../utils/emojis');
 const { getText } = require('../utils/texts');
@@ -35,14 +37,18 @@ module.exports = {
       return;
     }
 
-    await respond(interaction, { embeds: [momozinEmbed({
+    const embedPayload = {
       title: 'Estudo finalizado',
       description: getText('study_finished_message', 'Sessão finalizada com carinho. O Momozin ficou orgulhoso do foco do casal.'),
+      image: getAssetPublicUrl('study_banner'),
       fields: [
         { name: 'Tempo', value: formatDuration(result.minutes * 60000), inline: true },
         { name: 'Recompensa', value: `+${result.coinsAwarded} MomoCoins`, inline: true },
         { name: 'Saldo', value: `${result.balance} MomoCoins`, inline: true },
       ],
-    })] });
+    };
+    await respond(interaction, { embeds: [momozinEmbed(embedPayload)] });
+    await publishDiaryEmbed(interaction, { title: 'MomoCoins por estudo', description: `+${result.coinsAwarded} MomoCoins por ${result.minutes} minuto(s) de foco.
+Saldo atual: ${result.balance} MomoCoins.`, image: getAssetPublicUrl('coins_banner') });
   },
 };
