@@ -102,7 +102,7 @@ function createMoviePickEmbed(movie, title = 'CineMomozin sorteou', tmdb = null)
     ? `**${displayTitle}**
 ${truncate(tmdb.overview, 900)}`
     : `**${movie.name}**
-${movie.comment || 'Um registro do CineMomozin para assistir juntinhos.'}`;
+${movie.comment || 'Uma recomendação do CineMomozin para assistir juntinhos.'}`;
 
   return momozinEmbed({
     title,
@@ -122,9 +122,9 @@ Kaiki: ${movie.kaiki_rating}/10`, inline: true },
 }
 
 function cineRandomLabel(action) {
-  if (action === 'random_movie') return { kind: 'movie', title: 'Filme sorteado', empty: 'Ainda não tem filme cadastrado para sortear.' };
-  if (action === 'random_series') return { kind: 'series', title: 'Série sorteada', empty: 'Ainda não tem série cadastrada para sortear.' };
-  return { kind: 'all', title: 'CineMomozin sorteou', empty: 'Ainda não tem filme ou série no CineMomozin para sortear.' };
+  if (action === 'random_movie') return { kind: 'movie', title: 'Filme recomendado', empty: 'Não encontrei filme novo para recomendar. Cadastrem mais opções no CineMomozin.' };
+  if (action === 'random_series') return { kind: 'series', title: 'Série recomendada', empty: 'Não encontrei série nova para recomendar. Cadastrem mais opções no CineMomozin.' };
+  return { kind: 'all', title: 'CineMomozin recomenda', empty: 'Não encontrei conteúdo novo para recomendar. Cadastrem mais opções no CineMomozin.' };
 }
 
 function tmdbOptionLabel(selection) {

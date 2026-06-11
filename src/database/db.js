@@ -112,7 +112,9 @@ async function migrate() {
       trivia_rating REAL NOT NULL,
       kaiki_rating REAL NOT NULL,
       comment TEXT NOT NULL,
-      watched_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      watched_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      watched INTEGER NOT NULL DEFAULT 0,
+      recommended_at TEXT
     );
 
     CREATE TABLE IF NOT EXISTS playlist (
@@ -166,6 +168,12 @@ async function migrate() {
     await run('ALTER TABLE memories ADD COLUMN image_url TEXT');
   }
 
+  const movieColumns = await all('PRAGMA table_info(movies)');
+  const ensureMovieColumn = async (name, definition) => {
+    if (!movieColumns.some((column) => column.name === name)) await run(`ALTER TABLE movies ADD COLUMN ${name} ${definition}`);
+  };
+  await ensureMovieColumn('watched', 'INTEGER NOT NULL DEFAULT 0');
+  await ensureMovieColumn('recommended_at', 'TEXT');
 
   const studyColumns = await all('PRAGMA table_info(study_sessions)');
   const ensureStudyColumn = async (name, definition) => {
