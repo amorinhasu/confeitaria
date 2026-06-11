@@ -1,0 +1,91 @@
+{
+  "base_url_env": "ASSETS_BASE_URL",
+  "items": {
+    "panel_main_banner": {
+      "url": "https://cdn.discordapp.com/attachments/1506484555664850995/1511073099259318282/Painel_20260601_152326_0000.png?ex=6a1f1ffd&is=6a1dce7d&hm=3823886a4f3a99f91645027b1511fcd9b64aecb2ec57d07c2e549bce38e594fa&",
+      "file": "assets/visuals/panel/painel-principal-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/painel embed principal"
+    },
+    "manual_home_banner": {
+      "url": "https://cdn.discordapp.com/attachments/1506484555664850995/1511073117026517153/1_20260601_152220_0000.png?ex=6a1f2001&is=6a1dce81&hm=4fb67f982d3c34caf08e70347b0959c1faf973f2b213b2e0dbae6c0661993a37&",
+      "file": "assets/visuals/manual/manual-home-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/manual embed inicial"
+    },
+    "manual_category_banner": {
+      "url": "https://cdn.discordapp.com/attachments/1506484555664850995/1511073117026517153/1_20260601_152220_0000.png?ex=6a1f2001&is=6a1dce81&hm=4fb67f982d3c34caf08e70347b0959c1faf973f2b213b2e0dbae6c0661993a37&",
+      "file": "assets/visuals/manual/manual-categoria-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "Embeds de categorias do manual"
+    },
+    "love_notes_banner": {
+      "url": "https://cdn.discordapp.com/attachments/1506484555664850995/1511073135485653194/3_20260601_152221_0002.png?ex=6a1f2005&is=6a1dce85&hm=142b1ffeb0aae48188c0d217a11a425a88f64be98a2cf0dcfc80c4942a29c71f&",
+      "file": "assets/visuals/recados/recados-banner.gif",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/recado adicionar e /recado sortear"
+    },
+    "memories_banner": {
+      "file": "assets/visuals/memorias/memorias-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/memoria adicionar"
+    },
+    "cine_banner": {
+      "url": "https://cdn.discordapp.com/attachments/1506484555664850995/1511073106926764192/4_20260601_152222_0003.png?ex=6a1f1fff&is=6a1dce7f&hm=93116112c2f0e1955ed4ad28736676181fed8e66a6e88ffa7c775dddde147bbc&",
+      "file": "assets/visuals/cine/cinemomozin-banner.jpg",
+      "format": "JPG",
+      "size": "1200x400",
+      "usage": "/cine adicionar"
+    },
+    "playlist_banner": {
+      "file": "assets/visuals/playlist/playlist-banner.gif",
+      "format": "GIF",
+      "size": "800x300",
+      "usage": "/playlist definir e /playlist ver",
+      "url": "https://cdn.discordapp.com/attachments/1506484555664850995/1511098150876872714/Copia_de_Painel_20260601_170014_0000.png?ex=6a1f3752&is=6a1de5d2&hm=0d000ef0cae1f4156a85f4e19c724729d846918f58deae061c7d12b102d9ff1a&"
+    },
+    "study_banner": {
+      "file": "assets/visuals/estudos/estudos-kaiki-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/estudo iniciar e /estudo finalizar"
+    },
+    "coins_banner": {
+      "file": "assets/visuals/momocoins/momocoins-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/moedas ver e /moedas adicionar"
+    },
+    "gifts_banner": {
+      "file": "assets/visuals/mimos/loja-mimos-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/mimo loja e /mimo comprar",
+      "url": "https://cdn.discordapp.com/attachments/1506484555664850995/1511098144736153660/Copia_de_Painel_20260601_170259_0000.png?ex=6a1f3750&is=6a1de5d0&hm=f84534d85b4e717a2e36860c9058a89fee9c4b59abba963bdde923117d23b62b&"
+    },
+    "profile_banner": {
+      "url": "https://cdn.discordapp.com/attachments/1506484555664850995/1511073125750669425/2_20260601_152221_0001.png?ex=6a1f2003&is=6a1dce83&hm=f7007a8bcf0784d10992d31cf5b97de6ba9f88aad003d0950021e1b55cb677f9&",
+      "file": "assets/visuals/perfil/perfil-casal-banner.png",
+      "format": "PNG",
+      "size": "1200x400",
+      "usage": "/perfil"
+    },
+    "success_gif": {
+      "file": "assets/visuals/feedback/sucesso-momozin.gif",
+      "format": "GIF",
+      "size": "600x240",
+      "usage": "Mensagens de sucesso"
+    },
+    "error_gif": {
+      "file": "assets/visuals/feedback/erro-momozin.gif",
+      "format": "GIF",
+      "size": "600x240",
+      "usage": "Mensagens de erro"
+    }
+  }
+}
