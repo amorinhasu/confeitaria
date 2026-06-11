@@ -8,7 +8,13 @@ const PUDINZINHO_ENTRY_CUSTOM_ID = 'entry:pudinzinho';
 function createPudinzinhoEntryEmbed() {
   return momozinEmbed({
     title: 'Entrada do Momozin',
-    description: 'Kaiki, clique no botão para virar Pudinzinho, receber o cargo e abrir a carta da Trívia. Depois disso, o Momozin libera o painel e todas as áreas do casal.',
+    description: `Ei, Pudinzinho...
+
+A Trívia deixou algumas surpresas espalhadas por aqui.
+
+Mas antes de explorar tudo, você precisa reivindicar oficialmente seu título.
+
+Clique no botão abaixo para começar.`,
     image: getAssetPublicUrl('gifts_banner'),
   });
 }

@@ -39,6 +39,14 @@ function createMovieModal() {
     );
 }
 
+
+function createStudyStartModal() {
+  return new ModalBuilder()
+    .setCustomId('modal:estudos:start')
+    .setTitle('Iniciar foco do casal')
+    .addComponents(input('subject', 'O que você vai estudar hoje?', TextInputStyle.Short, false, 'Matemática, Programação, Inglês...'));
+}
+
 function createPlaylistModal() {
   return new ModalBuilder()
     .setCustomId('modal:playlist:set')
@@ -53,4 +61,4 @@ function createGiftModal() {
     .addComponents(input('item', 'Item', TextInputStyle.Short, true, 'panquequinha, pudinzinho, cartinha...'));
 }
 
-module.exports = { createGiftModal, createLoveNoteModal, createMemoryModal, createMovieModal, createPlaylistModal };
+module.exports = { createGiftModal, createLoveNoteModal, createMemoryModal, createMovieModal, createPlaylistModal, createStudyStartModal };

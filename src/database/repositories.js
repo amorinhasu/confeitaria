@@ -114,18 +114,46 @@ async function listMovies(limit = 5) {
   return db.all('SELECT * FROM movies ORDER BY id DESC LIMIT ?', [limit]);
 }
 
+function dateFromSqlite(value) {
+  return new Date(`${value}Z`);
+}
+
+function calculatePauseSeconds(session, now = Date.now()) {
+  const storedPauseSeconds = Number(session.paused_seconds || 0);
+  if (!session.pause_started_at) return storedPauseSeconds;
+  return storedPauseSeconds + Math.max(0, Math.floor((now - dateFromSqlite(session.pause_started_at).getTime()) / 1000));
+}
+
+function calculateStudyMinutes(session, now = Date.now()) {
+  const startedAt = dateFromSqlite(session.started_at).getTime();
+  const endedAt = session.ended_at ? dateFromSqlite(session.ended_at).getTime() : now;
+  const effectiveMs = Math.max(0, endedAt - startedAt - (calculatePauseSeconds(session, endedAt) * 1000));
+  return Math.max(1, Math.floor(effectiveMs / 60000));
+}
+
 async function getStudyStats() {
   await db.ready;
   const row = await db.get(`
     SELECT
       COUNT(*) AS sessions,
       COALESCE(SUM(minutes), 0) AS minutes,
-      COALESCE(SUM(coins_awarded), 0) AS coins
+      COALESCE(SUM(coins_awarded), 0) AS coins,
+      COALESCE(SUM(pause_count), 0) AS pause_count,
+      COALESCE(SUM(paused_seconds), 0) AS paused_seconds
     FROM study_sessions
     WHERE ended_at IS NOT NULL
   `);
   const open = await db.get('SELECT * FROM study_sessions WHERE ended_at IS NULL ORDER BY id DESC LIMIT 1');
-  return { sessions: row?.sessions ?? 0, minutes: row?.minutes ?? 0, coins: row?.coins ?? 0, open };
+  return {
+    sessions: row?.sessions ?? 0,
+    minutes: row?.minutes ?? 0,
+    coins: row?.coins ?? 0,
+    pauseCount: row?.pause_count ?? 0,
+    pausedSeconds: row?.paused_seconds ?? 0,
+    open,
+    openPausedSeconds: open ? calculatePauseSeconds(open) : 0,
+    openEffectiveMinutes: open ? calculateStudyMinutes(open) : 0,
+  };
 }
 
 async function setPlaylist(link) {
@@ -164,12 +192,34 @@ async function getRecentCoinTransactions(limit = 5) {
   return db.all('SELECT * FROM coin_transactions ORDER BY id DESC LIMIT ?', [limit]);
 }
 
-async function startStudySession() {
+async function startStudySession(subject = null, startedBy = null) {
   await db.ready;
   const open = await db.get('SELECT * FROM study_sessions WHERE ended_at IS NULL ORDER BY id DESC LIMIT 1');
   if (open) return { created: false, session: open };
-  const info = await db.run('INSERT INTO study_sessions (started_at) VALUES (CURRENT_TIMESTAMP)');
+  const cleanSubject = subject?.trim() || null;
+  const info = await db.run('INSERT INTO study_sessions (started_at, subject, started_by) VALUES (CURRENT_TIMESTAMP, ?, ?)', [cleanSubject, startedBy || null]);
   return { created: true, session: await db.get('SELECT * FROM study_sessions WHERE id = ?', [info.lastID]) };
+}
+
+async function pauseStudySession(kind = 'water') {
+  await db.ready;
+  const session = await db.get('SELECT * FROM study_sessions WHERE ended_at IS NULL ORDER BY id DESC LIMIT 1');
+  if (!session) return { ok: false, reason: 'not_open' };
+  if (session.pause_started_at) return { ok: false, reason: 'already_paused', session };
+
+  await db.run('UPDATE study_sessions SET pause_started_at = CURRENT_TIMESTAMP, pause_count = pause_count + 1 WHERE id = ?', [session.id]);
+  return { ok: true, kind, session: await db.get('SELECT * FROM study_sessions WHERE id = ?', [session.id]) };
+}
+
+async function resumeStudySession() {
+  await db.ready;
+  const session = await db.get('SELECT * FROM study_sessions WHERE ended_at IS NULL ORDER BY id DESC LIMIT 1');
+  if (!session) return { ok: false, reason: 'not_open' };
+  if (!session.pause_started_at) return { ok: false, reason: 'not_paused', session };
+
+  const pauseSeconds = Math.max(0, Math.floor((Date.now() - dateFromSqlite(session.pause_started_at).getTime()) / 1000));
+  await db.run('UPDATE study_sessions SET paused_seconds = paused_seconds + ?, pause_started_at = NULL WHERE id = ?', [pauseSeconds, session.id]);
+  return { ok: true, pauseSeconds, session: await db.get('SELECT * FROM study_sessions WHERE id = ?', [session.id]) };
 }
 
 async function finishStudySession() {
@@ -177,21 +227,21 @@ async function finishStudySession() {
   const session = await db.get('SELECT * FROM study_sessions WHERE ended_at IS NULL ORDER BY id DESC LIMIT 1');
   if (!session) return null;
 
-  const startedAt = new Date(`${session.started_at}Z`);
-  const minutes = Math.max(1, Math.floor((Date.now() - startedAt.getTime()) / 60000));
+  const pausedSeconds = calculatePauseSeconds(session);
+  const minutes = calculateStudyMinutes(session);
   const coinsAwarded = Math.max(1, Math.floor(minutes / 10));
 
   return db.transaction(async (tx) => {
     await tx.run(`
       UPDATE study_sessions
-      SET ended_at = CURRENT_TIMESTAMP, minutes = ?, coins_awarded = ?
+      SET ended_at = CURRENT_TIMESTAMP, minutes = ?, coins_awarded = ?, paused_seconds = ?, pause_started_at = NULL
       WHERE id = ?
-    `, [minutes, coinsAwarded, session.id]);
+    `, [minutes, coinsAwarded, pausedSeconds, session.id]);
     await tx.run('UPDATE coins SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [coinsAwarded]);
     await tx.run('INSERT INTO coin_transactions (amount, type, reason) VALUES (?, ?, ?)', [coinsAwarded, 'study_reward', `Recompensa por ${minutes} minuto(s) de estudo`]);
 
     const balanceRow = await tx.get('SELECT balance FROM coins WHERE id = 1');
-    return { ...session, minutes, coinsAwarded, balance: balanceRow?.balance ?? 0 };
+    return { ...session, minutes, coinsAwarded, balance: balanceRow?.balance ?? 0, pausedSeconds, pauseCount: session.pause_count || 0 };
   });
 }
 
@@ -237,6 +287,8 @@ module.exports = {
   getRecentCoinTransactions,
   recordCoinTransaction,
   startStudySession,
+  pauseStudySession,
+  resumeStudySession,
   finishStudySession,
   getStudyStats,
   buyGift,

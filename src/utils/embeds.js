@@ -1,5 +1,5 @@
 const { getAssetPublicUrl } = require('./assets');
-const { daysSince, formatDuration } = require('./date');
+const { daysSince, formatDuration, formatDurationAllowZero } = require('./date');
 const { getText } = require('./texts');
 const { momozinEmbed } = require('./theme');
 
@@ -50,6 +50,9 @@ function studyStatsEmbed(stats) {
       { name: 'Sessões finalizadas', value: String(stats.sessions), inline: true },
       { name: 'Tempo total', value: formatDuration(stats.minutes * 60000), inline: true },
       { name: 'MomoCoins por estudo', value: String(stats.coins), inline: true },
+      { name: 'Pausas', value: String(stats.pauseCount || 0), inline: true },
+      { name: 'Tempo em pausas', value: formatDurationAllowZero((stats.pausedSeconds || 0) * 1000), inline: true },
+      { name: 'Sessão atual', value: stats.open ? `${stats.open.subject || 'Sem tema definido'} • ${formatDuration((stats.openEffectiveMinutes || 1) * 60000)} efetivos` : 'Nenhuma sessão aberta', inline: false },
     ],
   });
 }

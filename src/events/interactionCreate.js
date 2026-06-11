@@ -2,7 +2,7 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = re
 const { createManualHomeEmbed, createManualHomeRows, createManualPageEmbed, createManualPageRows, getManualPage } = require('../components/manual');
 const { createAdminEmbed, createAdminRows } = require('../components/admin');
 const { createAreaEmbed, createAreaRows, createPanelEmbed, createPanelRows } = require('../components/panel');
-const { createGiftModal, createLoveNoteModal, createMemoryModal, createMovieModal, createPlaylistModal } = require('../components/modals');
+const { createGiftModal, createLoveNoteModal, createMemoryModal, createMovieModal, createPlaylistModal, createStudyStartModal } = require('../components/modals');
 const {
   addLoveNote,
   addMemory,
@@ -11,6 +11,8 @@ const {
   buyGift,
   countLoveNotes,
   finishStudySession,
+  pauseStudySession,
+  resumeStudySession,
   getCoins,
   getPlaylist,
   getProfile,
@@ -27,6 +29,7 @@ const { getAssetPublicUrl } = require('../utils/assets');
 const { isAdminUser, isAuthorizedCouple } = require('../utils/authorization');
 const { enforceCommandsChannel, publishDiaryEmbed } = require('../utils/channels');
 const { formatCoinTransactions } = require('../utils/coins');
+const { formatDuration, formatDurationAllowZero } = require('../utils/date');
 const { profileEmbed, studyStatsEmbed } = require('../utils/embeds');
 const { publishLoveNoteReadDiaryEntry, publishLoveNoteSavedDiaryEntry, publishPudinzinhoLetterDiaryEntry } = require('../utils/diary');
 const { createPudinzinhoLetterEmbed } = require('../utils/pudinzinhoLetter');
@@ -71,12 +74,31 @@ async function publishPlaylistDiaryEntry(interaction, link) {
   }, 'playlist');
 }
 
-async function publishStudyDiaryEntry(interaction, { title, description }) {
-  await publishDiaryEmbed(interaction, { title, description, image: getAssetPublicUrl('study_banner') }, 'estudos');
+async function publishStudyDiaryEntry(interaction, { title, description, fields = [] }) {
+  await publishDiaryEmbed(interaction, { title, description, image: getAssetPublicUrl('study_banner'), fields }, 'estudos');
 }
 
-async function publishCoinsDiaryEntry(interaction, { title, description }) {
-  await publishDiaryEmbed(interaction, { title, description, image: getAssetPublicUrl('coins_banner') }, 'estudos');
+function studySubjectText(subject) {
+  return subject || 'Sem tema definido';
+}
+
+function studyUserText(interaction, userId) {
+  return userId ? `<@${userId}>` : interaction.user?.toString?.() || 'Casal Momozin';
+}
+
+async function publishStudyFinishDiaryEntry(interaction, result) {
+  await publishDiaryEmbed(interaction, {
+    title: 'Foco do casal finalizado',
+    description: 'Sessão finalizada com carinho no Momozin.',
+    image: getAssetPublicUrl('study_banner'),
+    fields: [
+      { name: 'Quem estudou', value: studyUserText(interaction, result.started_by), inline: true },
+      { name: 'Tempo total', value: formatDuration(result.minutes * 60000), inline: true },
+      { name: 'Tema estudado', value: studySubjectText(result.subject), inline: false },
+      { name: 'Pausas', value: `${result.pauseCount || 0} pausa(s) • ${formatDurationAllowZero((result.pausedSeconds || 0) * 1000)}`, inline: false },
+      { name: 'Recompensa', value: `+${result.coinsAwarded} MomoCoins • Saldo ${result.balance}`, inline: false },
+    ],
+  }, 'estudos');
 }
 
 async function publishGiftDiaryEntry(interaction, result) {
@@ -220,6 +242,7 @@ async function handlePanelButton(interaction) {
   }
 
   if (areaId === 'recados' && action === 'add') return interaction.showModal(createLoveNoteModal());
+  if (areaId === 'estudos' && action === 'start') return interaction.showModal(createStudyStartModal());
   if (areaId === 'memorias' && action === 'add') return interaction.showModal(createMemoryModal());
   if (areaId === 'cine' && action === 'add') return interaction.showModal(createMovieModal());
   if (areaId === 'playlist' && action === 'set') return interaction.showModal(createPlaylistModal());
@@ -266,21 +289,50 @@ async function handlePanelButton(interaction) {
     return;
   }
 
-  if (areaId === 'estudos' && action === 'start') {
-    const result = await startStudySession();
-    await interaction.editReply(result.created
-      ? { embeds: [momozinEmbed({ title: 'Estudo iniciado', description: getText('study_started', 'Cronômetro ligado para o foco do casal render MomoCoins.'), image: getAssetPublicUrl('study_banner') })] }
-      : { content: withEmoji('estudos', 'book', getText('study_already_open', 'Já existe uma sessão de estudo aberta. Finalize antes de iniciar outra, panquequinha.')) });
-    if (result.created) await publishStudyDiaryEntry(interaction, { title: 'Foco do casal iniciado', description: 'Uma sessão de estudos foi iniciada no Momozin.' });
+
+  if (areaId === 'estudos' && (action === 'pause_water' || action === 'pause_grude')) {
+    const kind = action === 'pause_grude' ? 'grude' : 'water';
+    const result = await pauseStudySession(kind);
+    if (!result.ok) {
+      await interaction.editReply({ content: withEmoji('estudos', 'book', result.reason === 'already_paused' ? 'A sessão já está pausada. Clique em Retomar quando quiser voltar.' : getText('study_not_open', 'Não tem sessão de estudo aberta para finalizar.')) });
+      return;
+    }
+    await interaction.editReply({ embeds: [momozinEmbed({
+      title: kind === 'grude' ? 'Pausa para Grude' : 'Pausa para Água',
+      description: kind === 'grude' ? 'Pausa liberada para grudar um pouquinho sem perder o foco.' : 'Pausa registrada. Bebe uma água e volta com calma.',
+      image: getAssetPublicUrl('study_banner'),
+    })] });
+    return;
+  }
+
+  if (areaId === 'estudos' && action === 'resume') {
+    const result = await resumeStudySession();
+    if (!result.ok) {
+      await interaction.editReply({ content: withEmoji('estudos', 'book', result.reason === 'not_paused' ? 'A sessão não está pausada agora.' : getText('study_not_open', 'Não tem sessão de estudo aberta para finalizar.')) });
+      return;
+    }
+    await interaction.editReply({ embeds: [momozinEmbed({ title: 'Foco retomado', description: `Voltamos. Tempo em pausa: ${formatDurationAllowZero(result.pauseSeconds * 1000)}.`, image: getAssetPublicUrl('study_banner') })] });
     return;
   }
 
   if (areaId === 'estudos' && action === 'finish') {
     const result = await finishStudySession();
     await interaction.editReply(result
-      ? { embeds: [momozinEmbed({ title: 'Estudo finalizado', description: `${getText('study_finished_message', 'Sessão finalizada com carinho. O Momozin ficou orgulhoso do foco do casal.')}\n+${result.coinsAwarded} MomoCoins • Saldo ${result.balance}`, image: getAssetPublicUrl('study_banner') })] }
+      ? { embeds: [momozinEmbed({
+        title: 'Estudo finalizado',
+        description: getText('study_finished_message', 'Sessão finalizada com carinho. O Momozin ficou orgulhoso do foco do casal.'),
+        image: getAssetPublicUrl('study_banner'),
+        fields: [
+          { name: 'Tempo estudado', value: formatDuration(result.minutes * 60000), inline: true },
+          { name: 'Tema', value: studySubjectText(result.subject), inline: true },
+          { name: 'Pausas', value: `${result.pauseCount || 0} pausa(s)`, inline: true },
+          { name: 'Tempo em pausas', value: formatDurationAllowZero((result.pausedSeconds || 0) * 1000), inline: true },
+          { name: 'Recompensa', value: `+${result.coinsAwarded} MomoCoins`, inline: true },
+          { name: 'Saldo', value: `${result.balance} MomoCoins`, inline: true },
+        ],
+      })] }
       : { content: withEmoji('estudos', 'book', getText('study_not_open', 'Não tem sessão de estudo aberta para finalizar.')) });
-    if (result) await publishCoinsDiaryEntry(interaction, { title: 'MomoCoins por estudo', description: `+${result.coinsAwarded} MomoCoins por ${result.minutes} minuto(s) de foco.\nSaldo atual: ${result.balance} MomoCoins.` });
+    if (result) await publishStudyFinishDiaryEntry(interaction, result);
     return;
   }
 
@@ -387,6 +439,28 @@ async function handleModalSubmit(interaction) {
     await addLoveNote(text, imageUrl);
     await interaction.editReply({ embeds: [momozinEmbed({ title: 'Recado salvo', description: getText('recado_saved', 'O Momozin guardou essa frase no potinho azul.'), image: imageUrl || getAssetPublicUrl('love_notes_banner') })] });
     await publishLoveNoteSavedDiaryEntry(interaction, text, imageUrl);
+    return;
+  }
+
+  if (areaId === 'estudos' && action === 'start') {
+    const subject = interaction.fields.getTextInputValue('subject')?.trim() || null;
+    const result = await startStudySession(subject, interaction.user.id);
+    await interaction.editReply(result.created
+      ? { embeds: [momozinEmbed({
+        title: 'Estudo iniciado',
+        description: getText('study_started', 'Cronômetro ligado para o foco do casal render MomoCoins.'),
+        image: getAssetPublicUrl('study_banner'),
+        fields: [{ name: 'Tema', value: studySubjectText(result.session.subject), inline: false }],
+      })] }
+      : { content: withEmoji('estudos', 'book', getText('study_already_open', 'Já existe uma sessão de estudo aberta. Finalize antes de iniciar outra, panquequinha.')) });
+    if (result.created) await publishStudyDiaryEntry(interaction, {
+      title: 'Foco do casal iniciado',
+      description: 'Uma sessão de estudos foi iniciada no Momozin.',
+      fields: [
+        { name: 'Quem estudou', value: interaction.user.toString(), inline: true },
+        { name: 'Tema', value: studySubjectText(result.session.subject), inline: true },
+      ],
+    });
     return;
   }
 

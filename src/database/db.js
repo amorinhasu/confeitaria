@@ -134,7 +134,12 @@ async function migrate() {
       started_at TEXT NOT NULL,
       ended_at TEXT,
       minutes INTEGER,
-      coins_awarded INTEGER NOT NULL DEFAULT 0
+      coins_awarded INTEGER NOT NULL DEFAULT 0,
+      subject TEXT,
+      started_by TEXT,
+      pause_started_at TEXT,
+      pause_count INTEGER NOT NULL DEFAULT 0,
+      paused_seconds INTEGER NOT NULL DEFAULT 0
     );
   `);
 
@@ -147,6 +152,17 @@ async function migrate() {
   if (!memoryColumns.some((column) => column.name === 'image_url')) {
     await run('ALTER TABLE memories ADD COLUMN image_url TEXT');
   }
+
+
+  const studyColumns = await all('PRAGMA table_info(study_sessions)');
+  const ensureStudyColumn = async (name, definition) => {
+    if (!studyColumns.some((column) => column.name === name)) await run(`ALTER TABLE study_sessions ADD COLUMN ${name} ${definition}`);
+  };
+  await ensureStudyColumn('subject', 'TEXT');
+  await ensureStudyColumn('started_by', 'TEXT');
+  await ensureStudyColumn('pause_started_at', 'TEXT');
+  await ensureStudyColumn('pause_count', 'INTEGER NOT NULL DEFAULT 0');
+  await ensureStudyColumn('paused_seconds', 'INTEGER NOT NULL DEFAULT 0');
 
   await exec('DROP TABLE IF EXISTS couple_setup');
   await run('INSERT OR IGNORE INTO couple_profile (id) VALUES (1)');

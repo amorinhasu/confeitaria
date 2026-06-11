@@ -59,6 +59,9 @@ const areaActions = {
   ],
   estudos: [
     ['panel:estudos:start', 'Iniciar estudo', 'estudos', 'book'],
+    ['panel:estudos:pause_water', 'Pausa para Água', 'estudos', 'coffee'],
+    ['panel:estudos:pause_grude', 'Pausa para Grude', 'perfil', 'heart'],
+    ['panel:estudos:resume', 'Retomar', 'feedback', 'success'],
     ['panel:estudos:finish', 'Finalizar estudo', 'estudos', 'book'],
     ['panel:estudos:stats', 'Ver progresso', 'momocoins', 'coin'],
   ],
