@@ -114,6 +114,28 @@ async function listMovies(limit = 5) {
   return db.all('SELECT * FROM movies ORDER BY id DESC LIMIT ?', [limit]);
 }
 
+async function getRandomMovie(kind = 'all') {
+  await db.ready;
+  const normalizedKind = String(kind || 'all').toLowerCase();
+  if (normalizedKind === 'movie') {
+    return db.get(`
+      SELECT * FROM movies
+      WHERE LOWER(type) LIKE '%filme%' OR LOWER(type) LIKE '%movie%'
+      ORDER BY RANDOM()
+      LIMIT 1
+    `);
+  }
+  if (normalizedKind === 'series') {
+    return db.get(`
+      SELECT * FROM movies
+      WHERE LOWER(type) LIKE '%série%' OR LOWER(type) LIKE '%serie%' OR LOWER(type) LIKE '%séries%' OR LOWER(type) LIKE '%series%'
+      ORDER BY RANDOM()
+      LIMIT 1
+    `);
+  }
+  return db.get('SELECT * FROM movies ORDER BY RANDOM() LIMIT 1');
+}
+
 function dateFromSqlite(value) {
   return new Date(`${value}Z`);
 }
@@ -227,8 +249,10 @@ async function finishStudySession() {
   const session = await db.get('SELECT * FROM study_sessions WHERE ended_at IS NULL ORDER BY id DESC LIMIT 1');
   if (!session) return null;
 
-  const pausedSeconds = calculatePauseSeconds(session);
-  const minutes = calculateStudyMinutes(session);
+  const finishedAt = Date.now();
+  const pausedSeconds = calculatePauseSeconds(session, finishedAt);
+  const minutes = calculateStudyMinutes(session, finishedAt);
+  const totalSeconds = Math.max(0, Math.floor((finishedAt - dateFromSqlite(session.started_at).getTime()) / 1000));
   const coinsAwarded = Math.max(1, Math.floor(minutes / 10));
 
   return db.transaction(async (tx) => {
@@ -241,7 +265,7 @@ async function finishStudySession() {
     await tx.run('INSERT INTO coin_transactions (amount, type, reason) VALUES (?, ?, ?)', [coinsAwarded, 'study_reward', `Recompensa por ${minutes} minuto(s) de estudo`]);
 
     const balanceRow = await tx.get('SELECT balance FROM coins WHERE id = 1');
-    return { ...session, minutes, coinsAwarded, balance: balanceRow?.balance ?? 0, pausedSeconds, pauseCount: session.pause_count || 0 };
+    return { ...session, minutes, coinsAwarded, balance: balanceRow?.balance ?? 0, pausedSeconds, totalSeconds, pauseCount: session.pause_count || 0 };
   });
 }
 
@@ -279,6 +303,7 @@ module.exports = {
   updateMemoryImage,
   listMemories,
   addMovie,
+  getRandomMovie,
   listMovies,
   setPlaylist,
   getPlaylist,

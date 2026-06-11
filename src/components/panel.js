@@ -52,6 +52,9 @@ const areaActions = {
   cine: [
     ['panel:cine:add', 'Adicionar filme/série', 'cine', 'movie'],
     ['panel:cine:list', 'Ver histórico', 'cine', 'movie'],
+    ['panel:cine:random_all', 'Sortear qualquer', 'cine', 'movie'],
+    ['panel:cine:random_movie', 'Sortear filme', 'cine', 'movie'],
+    ['panel:cine:random_series', 'Sortear série', 'cine', 'movie'],
   ],
   playlist: [
     ['panel:playlist:set', 'Definir playlist', 'playlist', 'music'],
@@ -61,7 +64,8 @@ const areaActions = {
     ['panel:estudos:start', 'Iniciar estudo', 'estudos', 'book'],
     ['panel:estudos:pause_water', 'Pausa para Água', 'estudos', 'coffee'],
     ['panel:estudos:pause_grude', 'Pausa para Grude', 'perfil', 'heart'],
-    ['panel:estudos:resume', 'Retomar', 'feedback', 'success'],
+    ['panel:estudos:resume', 'Retomar estudo', 'feedback', 'success'],
+    ['panel:estudos:time', 'Ver tempo atual', 'estudos', 'coffee'],
     ['panel:estudos:finish', 'Finalizar estudo', 'estudos', 'book'],
     ['panel:estudos:stats', 'Ver progresso', 'momocoins', 'coin'],
   ],

@@ -16,6 +16,7 @@ const {
   getCoins,
   getPlaylist,
   getProfile,
+  getRandomMovie,
   getRandomLoveNote,
   getRecentCoinTransactions,
   getStudyStats,
@@ -66,6 +67,28 @@ Kaiki: ${movie.kaikiRating}/10`, inline: true },
   }, 'cine');
 }
 
+
+function createMoviePickEmbed(movie, title = 'CineMomozin sorteou') {
+  return momozinEmbed({
+    title,
+    description: `**${movie.name}**
+${movie.comment || 'Um registro do CineMomozin para assistir juntinhos.'}`,
+    image: getAssetPublicUrl('cine_banner'),
+    fields: [
+      { name: 'Tipo', value: movie.type || 'Não informado', inline: true },
+      { name: 'Plataforma', value: movie.platform || 'Não informada', inline: true },
+      { name: 'Notas', value: `Trívia: ${movie.trivia_rating}/10
+Kaiki: ${movie.kaiki_rating}/10`, inline: true },
+    ],
+  });
+}
+
+function cineRandomLabel(action) {
+  if (action === 'random_movie') return { kind: 'movie', title: 'Filme sorteado', empty: 'Ainda não tem filme cadastrado para sortear.' };
+  if (action === 'random_series') return { kind: 'series', title: 'Série sorteada', empty: 'Ainda não tem série cadastrada para sortear.' };
+  return { kind: 'all', title: 'CineMomozin sorteou', empty: 'Ainda não tem filme ou série no CineMomozin para sortear.' };
+}
+
 async function publishPlaylistDiaryEntry(interaction, link) {
   await publishDiaryEmbed(interaction, {
     title: 'Playlist atualizada',
@@ -86,6 +109,31 @@ function studyUserText(interaction, userId) {
   return userId ? `<@${userId}>` : interaction.user?.toString?.() || 'Casal Momozin';
 }
 
+function createCurrentStudyTimeEmbed(stats) {
+  const open = stats.open;
+  if (!open) return null;
+
+  const startedAt = new Date(`${open.started_at}Z`).getTime();
+  const totalMs = Math.max(0, Date.now() - startedAt);
+  const pausedMs = Math.max(0, (stats.openPausedSeconds || 0) * 1000);
+  const effectiveMs = Math.max(0, totalMs - pausedMs);
+  const isPaused = Boolean(open.pause_started_at);
+
+  return momozinEmbed({
+    title: 'Tempo atual do foco',
+    description: isPaused ? 'A sessão está pausada agora. Retome quando quiser voltar ao foco.' : 'A sessão está rolando agora. O Momozin está contando o tempo sem fazer spam.',
+    image: getAssetPublicUrl('study_banner'),
+    fields: [
+      { name: 'Tema', value: studySubjectText(open.subject), inline: false },
+      { name: 'Quem iniciou', value: studyUserText({ user: null }, open.started_by), inline: true },
+      { name: 'Tempo efetivo', value: formatDurationAllowZero(effectiveMs), inline: true },
+      { name: 'Tempo pausado', value: formatDurationAllowZero(pausedMs), inline: true },
+      { name: 'Tempo total', value: formatDurationAllowZero(totalMs), inline: true },
+      { name: 'Pausas', value: `${open.pause_count || 0} pausa(s)`, inline: true },
+    ],
+  });
+}
+
 async function publishStudyFinishDiaryEntry(interaction, result) {
   await publishDiaryEmbed(interaction, {
     title: 'Foco do casal finalizado',
@@ -93,7 +141,8 @@ async function publishStudyFinishDiaryEntry(interaction, result) {
     image: getAssetPublicUrl('study_banner'),
     fields: [
       { name: 'Quem estudou', value: studyUserText(interaction, result.started_by), inline: true },
-      { name: 'Tempo total', value: formatDuration(result.minutes * 60000), inline: true },
+      { name: 'Tempo efetivo', value: formatDuration(result.minutes * 60000), inline: true },
+      { name: 'Tempo total', value: formatDurationAllowZero((result.totalSeconds || result.minutes * 60) * 1000), inline: true },
       { name: 'Tema estudado', value: studySubjectText(result.subject), inline: false },
       { name: 'Pausas', value: `${result.pauseCount || 0} pausa(s) • ${formatDurationAllowZero((result.pausedSeconds || 0) * 1000)}`, inline: false },
       { name: 'Recompensa', value: `+${result.coinsAwarded} MomoCoins • Saldo ${result.balance}`, inline: false },
@@ -281,6 +330,15 @@ async function handlePanelButton(interaction) {
     return;
   }
 
+  if (areaId === 'cine' && action?.startsWith('random_')) {
+    const randomConfig = cineRandomLabel(action);
+    const movie = await getRandomMovie(randomConfig.kind);
+    await interaction.editReply(movie
+      ? { embeds: [createMoviePickEmbed(movie, randomConfig.title)] }
+      : { content: withEmoji('cine', 'movie', randomConfig.empty) });
+    return;
+  }
+
   if (areaId === 'playlist' && action === 'view') {
     const playlist = await getPlaylist();
     await interaction.editReply(playlist
@@ -315,6 +373,14 @@ async function handlePanelButton(interaction) {
     return;
   }
 
+  if (areaId === 'estudos' && action === 'time') {
+    const embed = createCurrentStudyTimeEmbed(await getStudyStats());
+    await interaction.editReply(embed
+      ? { embeds: [embed] }
+      : { content: withEmoji('estudos', 'book', 'Não tem sessão de estudo aberta agora.') });
+    return;
+  }
+
   if (areaId === 'estudos' && action === 'finish') {
     const result = await finishStudySession();
     await interaction.editReply(result
@@ -323,7 +389,8 @@ async function handlePanelButton(interaction) {
         description: getText('study_finished_message', 'Sessão finalizada com carinho. O Momozin ficou orgulhoso do foco do casal.'),
         image: getAssetPublicUrl('study_banner'),
         fields: [
-          { name: 'Tempo estudado', value: formatDuration(result.minutes * 60000), inline: true },
+          { name: 'Tempo efetivo', value: formatDuration(result.minutes * 60000), inline: true },
+          { name: 'Tempo total', value: formatDurationAllowZero((result.totalSeconds || result.minutes * 60) * 1000), inline: true },
           { name: 'Tema', value: studySubjectText(result.subject), inline: true },
           { name: 'Pausas', value: `${result.pauseCount || 0} pausa(s)`, inline: true },
           { name: 'Tempo em pausas', value: formatDurationAllowZero((result.pausedSeconds || 0) * 1000), inline: true },

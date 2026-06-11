@@ -23,7 +23,8 @@ async function publishStudyFinish(interaction, result) {
     image: getAssetPublicUrl('study_banner'),
     fields: [
       { name: 'Quem estudou', value: studyUserText(interaction, result.started_by), inline: true },
-      { name: 'Tempo total', value: formatDuration(result.minutes * 60000), inline: true },
+      { name: 'Tempo efetivo', value: formatDuration(result.minutes * 60000), inline: true },
+      { name: 'Tempo total', value: formatDurationAllowZero((result.totalSeconds || result.minutes * 60) * 1000), inline: true },
       { name: 'Tema estudado', value: studySubjectText(result.subject), inline: false },
       { name: 'Pausas', value: `${result.pauseCount || 0} pausa(s) • ${formatDurationAllowZero((result.pausedSeconds || 0) * 1000)}`, inline: false },
       { name: 'Recompensa', value: `+${result.coinsAwarded} MomoCoins • Saldo ${result.balance}`, inline: false },
@@ -116,7 +117,8 @@ module.exports = {
       description: `${getText('study_finished_message', 'Sessão finalizada com carinho. O Momozin ficou orgulhoso do foco do casal.')}`,
       image: getAssetPublicUrl('study_banner'),
       fields: [
-        { name: 'Tempo estudado', value: formatDuration(result.minutes * 60000), inline: true },
+        { name: 'Tempo efetivo', value: formatDuration(result.minutes * 60000), inline: true },
+        { name: 'Tempo total', value: formatDurationAllowZero((result.totalSeconds || result.minutes * 60) * 1000), inline: true },
         { name: 'Tema', value: studySubjectText(result.subject), inline: true },
         { name: 'Pausas', value: `${result.pauseCount || 0} pausa(s)`, inline: true },
         { name: 'Tempo em pausas', value: formatDurationAllowZero((result.pausedSeconds || 0) * 1000), inline: true },
