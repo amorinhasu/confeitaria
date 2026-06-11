@@ -121,7 +121,6 @@ function studyActionsByState(studyOpen = false) {
     return [
       ['panel:estudos:start', 'Iniciar estudo', 'estudos', 'book'],
       ['panel:estudos:stats', 'Ver progresso', 'momocoins', 'coin'],
-      ['panel:estudos:time', 'Status', 'estudos', 'coffee'],
     ];
   }
 

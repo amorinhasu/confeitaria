@@ -29,6 +29,10 @@ function isPudinzinhoEntryInteraction(interaction) {
   return interaction.customId === 'entry:pudinzinho';
 }
 
+function isStudyStatusInteraction(interaction) {
+  return interaction.customId?.startsWith('panel:estudos') || interaction.customId?.startsWith('modal:estudos');
+}
+
 function isCommandsChannel(interaction) {
   if (!commandsChannelId) return true;
   return interaction.channelId === commandsChannelId || interaction.channel?.id === commandsChannelId;
@@ -39,9 +43,15 @@ function isEntryChannel(interaction) {
   return interaction.channelId === entryChannelId || interaction.channel?.id === entryChannelId;
 }
 
+function isStudyChannel(interaction) {
+  if (!estudosChannelId) return false;
+  return interaction.channelId === estudosChannelId || interaction.channel?.id === estudosChannelId;
+}
+
 async function enforceCommandsChannel(interaction) {
   if (isCommandsChannel(interaction) || isAdminInteraction(interaction)) return true;
   if (interaction.isButton?.() && isPudinzinhoEntryInteraction(interaction) && isEntryChannel(interaction)) return true;
+  if ((interaction.isButton?.() || interaction.isModalSubmit?.()) && isStudyStatusInteraction(interaction) && isStudyChannel(interaction)) return true;
 
   const content = `O Momozin deve ser usado no canal <#${commandsChannelId}>.`;
   if (interaction.deferred || interaction.replied) await interaction.followUp({ content, ephemeral: true });
@@ -96,6 +106,7 @@ module.exports = {
   getMemoriesChannel,
   isCommandsChannel,
   isEntryChannel,
+  isStudyChannel,
   publishDiaryEmbed,
   publishToConfiguredChannel,
   publishToMemoriesChannel,

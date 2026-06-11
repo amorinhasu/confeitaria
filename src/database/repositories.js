@@ -233,7 +233,7 @@ async function pauseStudySession(kind = 'water') {
     if (!session) return { ok: false, reason: 'not_open' };
     if (session.pause_started_at) return { ok: false, reason: 'already_paused', session };
 
-    const update = await tx.run('UPDATE study_sessions SET pause_started_at = CURRENT_TIMESTAMP, pause_count = pause_count + 1 WHERE id = ? AND ended_at IS NULL AND pause_started_at IS NULL', [session.id]);
+    const update = await tx.run('UPDATE study_sessions SET pause_started_at = CURRENT_TIMESTAMP, pause_kind = ?, pause_count = pause_count + 1 WHERE id = ? AND ended_at IS NULL AND pause_started_at IS NULL', [kind, session.id]);
     if (!update.changes) return { ok: false, reason: 'already_paused', session: await tx.get('SELECT * FROM study_sessions WHERE id = ?', [session.id]) };
     return { ok: true, kind, session: await tx.get('SELECT * FROM study_sessions WHERE id = ?', [session.id]) };
   });
@@ -247,7 +247,7 @@ async function resumeStudySession() {
     if (!session.pause_started_at) return { ok: false, reason: 'not_paused', session };
 
     const pauseSeconds = Math.max(0, Math.floor((Date.now() - dateFromSqlite(session.pause_started_at).getTime()) / 1000));
-    const update = await tx.run('UPDATE study_sessions SET paused_seconds = paused_seconds + ?, pause_started_at = NULL WHERE id = ? AND ended_at IS NULL AND pause_started_at IS NOT NULL', [pauseSeconds, session.id]);
+    const update = await tx.run('UPDATE study_sessions SET paused_seconds = paused_seconds + ?, pause_started_at = NULL, pause_kind = NULL WHERE id = ? AND ended_at IS NULL AND pause_started_at IS NOT NULL', [pauseSeconds, session.id]);
     if (!update.changes) return { ok: false, reason: 'not_paused', session: await tx.get('SELECT * FROM study_sessions WHERE id = ?', [session.id]) };
     return { ok: true, pauseSeconds, session: await tx.get('SELECT * FROM study_sessions WHERE id = ?', [session.id]) };
   });
@@ -267,7 +267,7 @@ async function finishStudySession() {
 
     const update = await tx.run(`
       UPDATE study_sessions
-      SET ended_at = CURRENT_TIMESTAMP, minutes = ?, coins_awarded = ?, paused_seconds = ?, pause_started_at = NULL
+      SET ended_at = CURRENT_TIMESTAMP, minutes = ?, coins_awarded = ?, paused_seconds = ?, pause_started_at = NULL, pause_kind = NULL
       WHERE id = ? AND ended_at IS NULL
     `, [minutes, coinsAwarded, pausedSeconds, session.id]);
     if (!update.changes) return null;
@@ -291,7 +291,7 @@ async function resetOpenStudySession(reason = 'Reset administrativo de sessão t
     const totalSeconds = Math.max(0, Math.floor((resetAt - dateFromSqlite(session.started_at).getTime()) / 1000));
     const update = await tx.run(`
       UPDATE study_sessions
-      SET ended_at = CURRENT_TIMESTAMP, minutes = 0, coins_awarded = 0, paused_seconds = ?, pause_started_at = NULL
+      SET ended_at = CURRENT_TIMESTAMP, minutes = 0, coins_awarded = 0, paused_seconds = ?, pause_started_at = NULL, pause_kind = NULL
       WHERE id = ? AND ended_at IS NULL
     `, [pausedSeconds, session.id]);
     if (!update.changes) return { ok: false, reason: 'already_closed' };

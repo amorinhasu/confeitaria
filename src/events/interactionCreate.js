@@ -3,6 +3,7 @@ const { createManualHomeEmbed, createManualHomeRows, createManualPageEmbed, crea
 const { createAdminEmbed, createAdminRows } = require('../components/admin');
 const { createAreaEmbed, createAreaRows, createPanelEmbed, createPanelRows } = require('../components/panel');
 const { createGiftModal, createLoveNoteModal, createMemoryModal, createMovieModal, createPlaylistModal, createStudyStartModal } = require('../components/modals');
+const { updateStudyStatusMessage } = require('../components/studyStatus');
 const {
   addLoveNote,
   addMemory,
@@ -216,10 +217,6 @@ async function publishPlaylistDiaryEntry(interaction, link) {
   }, 'playlist');
 }
 
-async function publishStudyDiaryEntry(interaction, { title, description, fields = [] }) {
-  await publishDiaryEmbed(interaction, { title, description, image: getAssetPublicUrl('study_banner'), fields }, 'estudos');
-}
-
 function studySubjectText(subject) {
   return subject || 'Sem tema definido';
 }
@@ -251,22 +248,6 @@ function createCurrentStudyTimeEmbed(stats) {
       { name: 'Pausas', value: `${open.pause_count || 0} pausa(s)`, inline: true },
     ],
   });
-}
-
-async function publishStudyFinishDiaryEntry(interaction, result) {
-  await publishDiaryEmbed(interaction, {
-    title: 'Foco do casal finalizado',
-    description: 'Sessão finalizada com carinho no Momozin.',
-    image: getAssetPublicUrl('study_banner'),
-    fields: [
-      { name: 'Quem estudou', value: studyUserText(interaction, result.started_by), inline: true },
-      { name: 'Tempo efetivo', value: formatDuration(result.minutes * 60000), inline: true },
-      { name: 'Tempo total', value: formatDurationAllowZero((result.totalSeconds || result.minutes * 60) * 1000), inline: true },
-      { name: 'Tema estudado', value: studySubjectText(result.subject), inline: false },
-      { name: 'Pausas', value: `${result.pauseCount || 0} pausa(s) • ${formatDurationAllowZero((result.pausedSeconds || 0) * 1000)}`, inline: false },
-      { name: 'Recompensa', value: `+${result.coinsAwarded} MomoCoins • Saldo ${result.balance}`, inline: false },
-    ],
-  }, 'estudos');
 }
 
 async function publishGiftDiaryEntry(interaction, result) {
@@ -474,6 +455,7 @@ async function handlePanelButton(interaction) {
       await interaction.editReply({ content: withEmoji('estudos', 'book', result.reason === 'already_paused' ? 'A sessão já está pausada. Clique em Retomar quando quiser voltar.' : getText('study_not_open', 'Não tem sessão de estudo aberta para finalizar.')) });
       return;
     }
+    await updateStudyStatusMessage(interaction);
     await interaction.editReply({ embeds: [momozinEmbed({
       title: kind === 'grude' ? 'Pausa para Grude' : 'Pausa para Água',
       description: kind === 'grude' ? 'Pausa liberada para grudar um pouquinho sem perder o foco.' : 'Pausa registrada. Bebe uma água e volta com calma.',
@@ -488,6 +470,7 @@ async function handlePanelButton(interaction) {
       await interaction.editReply({ content: withEmoji('estudos', 'book', result.reason === 'not_paused' ? 'A sessão não está pausada agora.' : getText('study_not_open', 'Não tem sessão de estudo aberta para finalizar.')) });
       return;
     }
+    await updateStudyStatusMessage(interaction);
     await interaction.editReply({ embeds: [momozinEmbed({ title: 'Foco retomado', description: `Voltamos. Tempo em pausa: ${formatDurationAllowZero(result.pauseSeconds * 1000)}.`, image: getAssetPublicUrl('study_banner') })] });
     return;
   }
@@ -518,7 +501,7 @@ async function handlePanelButton(interaction) {
         ],
       })] }
       : { content: withEmoji('estudos', 'book', getText('study_not_open', 'Não tem sessão de estudo aberta para finalizar.')) });
-    if (result) await publishStudyFinishDiaryEntry(interaction, result);
+    if (result) await updateStudyStatusMessage(interaction);
     return;
   }
 
@@ -597,6 +580,7 @@ async function handleAdminButton(interaction) {
   const tab = interaction.customId.split(':')[1] || 'sistema';
   if (tab === 'reset_estudo') {
     const result = await resetOpenStudySession('Reset administrativo pelo painel do Momozin');
+    if (result.ok) await updateStudyStatusMessage(interaction);
     await interaction.update({
       embeds: [momozinEmbed({
         title: result.ok ? 'Sessão de estudo resetada' : 'Nenhuma sessão travada',
@@ -653,14 +637,7 @@ async function handleModalSubmit(interaction) {
         fields: [{ name: 'Tema', value: studySubjectText(result.session.subject), inline: false }],
       })] }
       : { content: withEmoji('estudos', 'book', getText('study_already_open', 'Já existe uma sessão de estudo aberta. Finalize antes de iniciar outra, panquequinha.')) });
-    if (result.created) await publishStudyDiaryEntry(interaction, {
-      title: 'Foco do casal iniciado',
-      description: 'Uma sessão de estudos foi iniciada no Momozin.',
-      fields: [
-        { name: 'Quem estudou', value: interaction.user.toString(), inline: true },
-        { name: 'Tema', value: studySubjectText(result.session.subject), inline: true },
-      ],
-    });
+    if (result.created) await updateStudyStatusMessage(interaction);
     return;
   }
 

@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { finishStudySession, pauseStudySession, resumeStudySession, startStudySession } = require('../database/repositories');
+const { updateStudyStatusMessage } = require('../components/studyStatus');
 const { getAssetPublicUrl } = require('../utils/assets');
-const { publishDiaryEmbed } = require('../utils/channels');
 const { formatDuration, formatDurationAllowZero } = require('../utils/date');
 const { withEmoji } = require('../utils/emojis');
 const { getText } = require('../utils/texts');
@@ -10,26 +10,6 @@ const { respond } = require('../utils/interactions');
 
 function studySubjectText(subject) {
   return subject || 'Sem tema definido';
-}
-
-function studyUserText(interaction, userId) {
-  return userId ? `<@${userId}>` : interaction.user?.toString?.() || 'Casal Momozin';
-}
-
-async function publishStudyFinish(interaction, result) {
-  await publishDiaryEmbed(interaction, {
-    title: 'Foco do casal finalizado',
-    description: 'Sessão finalizada com carinho no Momozin.',
-    image: getAssetPublicUrl('study_banner'),
-    fields: [
-      { name: 'Quem estudou', value: studyUserText(interaction, result.started_by), inline: true },
-      { name: 'Tempo efetivo', value: formatDuration(result.minutes * 60000), inline: true },
-      { name: 'Tempo total', value: formatDurationAllowZero((result.totalSeconds || result.minutes * 60) * 1000), inline: true },
-      { name: 'Tema estudado', value: studySubjectText(result.subject), inline: false },
-      { name: 'Pausas', value: `${result.pauseCount || 0} pausa(s) • ${formatDurationAllowZero((result.pausedSeconds || 0) * 1000)}`, inline: false },
-      { name: 'Recompensa', value: `+${result.coinsAwarded} MomoCoins • Saldo ${result.balance}`, inline: false },
-    ],
-  }, 'estudos');
 }
 
 module.exports = {
@@ -73,15 +53,7 @@ module.exports = {
         image: getAssetPublicUrl('study_banner'),
         fields: [{ name: 'Tema', value: studySubjectText(result.session.subject), inline: false }],
       })] });
-      await publishDiaryEmbed(interaction, {
-        title: 'Foco do casal iniciado',
-        description: 'Uma sessão de estudos foi iniciada no Momozin.',
-        image: getAssetPublicUrl('study_banner'),
-        fields: [
-          { name: 'Quem estudou', value: interaction.user.toString(), inline: true },
-          { name: 'Tema', value: studySubjectText(result.session.subject), inline: true },
-        ],
-      }, 'estudos');
+      await updateStudyStatusMessage(interaction);
       return;
     }
 
@@ -92,6 +64,7 @@ module.exports = {
         await respond(interaction, { content: withEmoji('estudos', 'book', result.reason === 'already_paused' ? 'A sessão já está pausada. Use `/estudo retomar` quando quiser voltar.' : getText('study_not_open', 'Não tem sessão de estudo aberta para finalizar.')), ephemeral: true });
         return;
       }
+      await updateStudyStatusMessage(interaction);
       await respond(interaction, { embeds: [momozinEmbed({ title: kind === 'grude' ? 'Pausa para Grude' : 'Pausa para Água', description: kind === 'grude' ? 'Pausa liberada para grudar um pouquinho sem perder o foco.' : 'Pausa registrada. Bebe uma água e volta com calma.', image: getAssetPublicUrl('study_banner') })] });
       return;
     }
@@ -102,6 +75,7 @@ module.exports = {
         await respond(interaction, { content: withEmoji('estudos', 'book', result.reason === 'not_paused' ? 'A sessão não está pausada agora.' : getText('study_not_open', 'Não tem sessão de estudo aberta para finalizar.')), ephemeral: true });
         return;
       }
+      await updateStudyStatusMessage(interaction);
       await respond(interaction, { embeds: [momozinEmbed({ title: 'Foco retomado', description: `Voltamos. Tempo em pausa: ${formatDurationAllowZero(result.pauseSeconds * 1000)}.`, image: getAssetPublicUrl('study_banner') })] });
       return;
     }
@@ -127,6 +101,6 @@ module.exports = {
       ],
     };
     await respond(interaction, { embeds: [momozinEmbed(embedPayload)] });
-    await publishStudyFinish(interaction, result);
+    await updateStudyStatusMessage(interaction);
   },
 };

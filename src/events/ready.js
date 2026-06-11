@@ -1,5 +1,6 @@
-const { entryChannelId, guildId } = require('../utils/config');
+const { entryChannelId, estudosChannelId, guildId } = require('../utils/config');
 const { ensurePudinzinhoEntryMessage } = require('../components/entry');
+const { ensureStudyStatusMessage } = require('../components/studyStatus');
 const { configureAvailableEmojis } = require('../utils/emojis');
 
 module.exports = {
@@ -26,6 +27,11 @@ module.exports = {
     if (entryChannelId) {
       const published = await ensurePudinzinhoEntryMessage(client, entryChannelId);
       console.log(`Mensagem de entrada Pudinzinho: ${published ? 'ok' : 'não publicada'}.`);
+    }
+
+    if (estudosChannelId) {
+      const published = await ensureStudyStatusMessage(client, estudosChannelId);
+      console.log(`Painel fixo de estudos: ${published ? 'ok' : 'não publicado'}.`);
     }
   },
 };

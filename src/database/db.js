@@ -151,6 +151,7 @@ async function migrate() {
       subject TEXT,
       started_by TEXT,
       pause_started_at TEXT,
+      pause_kind TEXT,
       pause_count INTEGER NOT NULL DEFAULT 0,
       paused_seconds INTEGER NOT NULL DEFAULT 0
     );
@@ -172,6 +173,7 @@ async function migrate() {
   await ensureStudyColumn('subject', 'TEXT');
   await ensureStudyColumn('started_by', 'TEXT');
   await ensureStudyColumn('pause_started_at', 'TEXT');
+  await ensureStudyColumn('pause_kind', 'TEXT');
   await ensureStudyColumn('pause_count', 'INTEGER NOT NULL DEFAULT 0');
   await ensureStudyColumn('paused_seconds', 'INTEGER NOT NULL DEFAULT 0');
 
