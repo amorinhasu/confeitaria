@@ -1,21 +1,15 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { getAssetPublicUrl } = require('../utils/assets');
 const { buttonEmoji } = require('../utils/emojis');
 const { momozinEmbed } = require('../utils/theme');
 
 const PUDINZINHO_ENTRY_CUSTOM_ID = 'entry:pudinzinho';
+const PUDINZINHO_ENTRY_IMAGE_URL = 'https://cdn.discordapp.com/attachments/1506484555664850995/1514461972182208633/Copia_de_Painel_20260610_235058_0000.png';
 
 function createPudinzinhoEntryEmbed() {
   return momozinEmbed({
-    title: 'Entrada do Momozin',
-    description: `Ei, Pudinzinho...
-
-A Trívia deixou algumas surpresas espalhadas por aqui.
-
-Mas antes de explorar tudo, você precisa reivindicar oficialmente seu título.
-
-Clique no botão abaixo para começar.`,
-    image: getAssetPublicUrl('gifts_banner'),
+    title: 'Uma carta espera por você...',
+    description: 'Algumas histórias começam com um simples clique. Quando estiver pronto, toque no botão abaixo e descubra o que a Trívia preparou para você.',
+    image: PUDINZINHO_ENTRY_IMAGE_URL,
   });
 }
 
