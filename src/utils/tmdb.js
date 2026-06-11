@@ -3,6 +3,7 @@ const { tmdbApiKey } = require('./config');
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 const pendingTmdbChoices = new Map();
 const PENDING_TTL_MS = 10 * 60 * 1000;
+const TMDB_TIMEOUT_MS = 4000;
 
 function isTmdbConfigured() {
   return Boolean(tmdbApiKey);
@@ -59,8 +60,11 @@ async function searchTmdbTitles(query, limit = 5) {
     include_adult: 'false',
   });
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TMDB_TIMEOUT_MS);
+
   try {
-    const response = await fetch(`https://api.themoviedb.org/3/search/multi?${params.toString()}`);
+    const response = await fetch(`https://api.themoviedb.org/3/search/multi?${params.toString()}`, { signal: controller.signal });
     if (!response.ok) return { ok: false, reason: `http_${response.status}`, results: [] };
 
     const data = await response.json();
@@ -72,7 +76,9 @@ async function searchTmdbTitles(query, limit = 5) {
     return { ok: true, results };
   } catch (error) {
     console.error('[TMDB] Erro ao buscar títulos:', error);
-    return { ok: false, reason: 'request_failed', results: [] };
+    return { ok: false, reason: error.name === 'AbortError' ? 'timeout' : 'request_failed', results: [] };
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

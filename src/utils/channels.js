@@ -26,7 +26,7 @@ function isAdminInteraction(interaction) {
 }
 
 function isPudinzinhoEntryInteraction(interaction) {
-  return interaction.customId === 'entry:pudinzinho' || interaction.customId === 'panel:perfil:pudinzinho';
+  return interaction.customId === 'entry:pudinzinho';
 }
 
 function isCommandsChannel(interaction) {

@@ -2,7 +2,7 @@ const { adminUserId, kaikiUserId, pudinzinhoRoleId, triviaUserId } = require('./
 
 const PUBLIC_COMMANDS = new Set(['manual']);
 const PUBLIC_BUTTON_PREFIXES = ['manual:'];
-const PUDINZINHO_ENTRY_CUSTOM_IDS = new Set(['entry:pudinzinho', 'panel:perfil:pudinzinho']);
+const PUDINZINHO_ENTRY_CUSTOM_IDS = new Set(['entry:pudinzinho']);
 
 function isAdminUser(userId) {
   return Boolean(adminUserId && userId === adminUserId);

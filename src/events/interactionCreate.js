@@ -81,16 +81,41 @@ Kaiki: ${movie.kaikiRating}/10`, inline: true },
 }
 
 
-function createMoviePickEmbed(movie, title = 'CineMomozin sorteou') {
+function tmdbTypeMatchesMovie(movie, result) {
+  const movieType = String(movie.type || '').toLowerCase();
+  if (result.mediaType === 'movie') return movieType.includes('filme') || movieType.includes('movie');
+  if (result.mediaType === 'tv') return movieType.includes('série') || movieType.includes('serie') || movieType.includes('series');
+  return false;
+}
+
+async function getTmdbEnrichmentForMovie(movie) {
+  if (!movie?.name || !isTmdbConfigured()) return null;
+
+  const search = await searchTmdbTitles(movie.name, 5);
+  if (!search.ok || !search.results.length) return null;
+  return search.results.find((result) => tmdbTypeMatchesMovie(movie, result)) || search.results[0];
+}
+
+function createMoviePickEmbed(movie, title = 'CineMomozin sorteou', tmdb = null) {
+  const displayTitle = tmdb?.title || movie.name;
+  const description = tmdb
+    ? `**${displayTitle}**
+${truncate(tmdb.overview, 900)}`
+    : `**${movie.name}**
+${movie.comment || 'Um registro do CineMomozin para assistir juntinhos.'}`;
+
   return momozinEmbed({
     title,
-    description: `**${movie.name}**
-${movie.comment || 'Um registro do CineMomozin para assistir juntinhos.'}`,
-    image: getAssetPublicUrl('cine_banner'),
+    description,
+    image: tmdb?.posterUrl || getAssetPublicUrl('cine_banner'),
     fields: [
-      { name: 'Tipo', value: movie.type || 'Não informado', inline: true },
+      ...(tmdb ? [
+        { name: 'Ano', value: tmdb.year, inline: true },
+        { name: 'Nota TMDB', value: tmdb.voteAverage === null ? 'sem nota' : `${tmdb.voteAverage}/10`, inline: true },
+      ] : []),
+      { name: 'Tipo', value: movie.type || tmdb?.type || 'Não informado', inline: true },
       { name: 'Plataforma', value: movie.platform || 'Não informada', inline: true },
-      { name: 'Notas', value: `Trívia: ${movie.trivia_rating}/10
+      { name: 'Notas do casal', value: `Trívia: ${movie.trivia_rating}/10
 Kaiki: ${movie.kaiki_rating}/10`, inline: true },
     ],
   });
@@ -394,7 +419,8 @@ async function handlePanelButton(interaction) {
       await interaction.reply({ content: 'Área não encontrada, momo.', ephemeral: true });
       return;
     }
-    await interaction.reply({ embeds: [embed], components: createAreaRows(areaId), ephemeral: true });
+    const studyStats = areaId === 'estudos' ? await getStudyStats() : null;
+    await interaction.reply({ embeds: [embed], components: createAreaRows(areaId, { studyOpen: Boolean(studyStats?.open) }), ephemeral: true });
     return;
   }
 
@@ -447,8 +473,9 @@ async function handlePanelButton(interaction) {
   if (areaId === 'cine' && action?.startsWith('random_')) {
     const randomConfig = cineRandomLabel(action);
     const movie = await getRandomMovie(randomConfig.kind);
+    const tmdb = movie ? await getTmdbEnrichmentForMovie(movie) : null;
     await interaction.editReply(movie
-      ? { embeds: [createMoviePickEmbed(movie, randomConfig.title)] }
+      ? { embeds: [createMoviePickEmbed(movie, randomConfig.title, tmdb)] }
       : { content: withEmoji('cine', 'movie', randomConfig.empty) });
     return;
   }
@@ -544,7 +571,6 @@ async function handlePanelButton(interaction) {
     return;
   }
 
-  if (areaId === 'perfil' && action === 'pudinzinho') return handlePudinzinhoButton(interaction);
 
   if (areaId === 'perfil') {
     const mode = action === 'achievements' ? 'achievements' : action === 'status' ? 'status' : 'full';
@@ -763,6 +789,7 @@ module.exports = {
       if (interaction.isButton() && interaction.customId.startsWith('manual:')) return await handleManualButton(interaction);
       if (interaction.isButton() && interaction.customId.startsWith('gift:buy:')) return await handleGiftButton(interaction);
       if (interaction.isModalSubmit() && interaction.customId.startsWith('modal:')) return await handleModalSubmit(interaction);
+      await respondEphemeral(interaction, withEmoji('feedback', 'warning', 'Esse botão não está mais ativo no Momozin. Abra o painel de novo para continuar.'));
     } catch (error) {
       console.error(`Erro ao processar interaction ${interaction.customId || interaction.commandName}:`, error);
       await respondEphemeral(interaction, withEmoji('feedback', 'error', getText('generic_command_error', 'O Momozin tropeçou no cobertor azul. Tenta de novo daqui a pouquinho!')));

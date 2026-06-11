@@ -78,7 +78,6 @@ const areaActions = {
     ['panel:perfil:view', 'Ver perfil', 'perfil', 'heart'],
     ['panel:perfil:achievements', 'Conquistas', 'perfil', 'achievement'],
     ['panel:perfil:status', 'Status', 'perfil', 'heart'],
-    ['panel:perfil:pudinzinho', 'Virar Pudinzinho', 'mimos', 'pudding'],
   ],
   manual: [
     ['panel:manual:open', 'Abrir manual', 'manual', 'home'],
@@ -119,8 +118,27 @@ function createAreaEmbed(areaId) {
   });
 }
 
-function createAreaRows(areaId) {
-  const actions = areaActions[areaId] || [];
+function studyActionsByState(studyOpen = false) {
+  if (!studyOpen) {
+    return [
+      ['panel:estudos:start', 'Iniciar estudo', 'estudos', 'book'],
+      ['panel:estudos:stats', 'Ver progresso', 'momocoins', 'coin'],
+      ['panel:estudos:time', 'Status', 'estudos', 'coffee'],
+    ];
+  }
+
+  return [
+    ['panel:estudos:pause_water', 'Pausa para Água', 'estudos', 'coffee'],
+    ['panel:estudos:pause_grude', 'Pausa para Grude', 'perfil', 'heart'],
+    ['panel:estudos:resume', 'Retomar estudo', 'feedback', 'success'],
+    ['panel:estudos:finish', 'Finalizar estudo', 'estudos', 'book'],
+    ['panel:estudos:time', 'Ver tempo atual', 'estudos', 'coffee'],
+    ['panel:estudos:stats', 'Ver progresso', 'momocoins', 'coin'],
+  ];
+}
+
+function createAreaRows(areaId, options = {}) {
+  const actions = areaId === 'estudos' ? studyActionsByState(Boolean(options.studyOpen)) : areaActions[areaId] || [];
   const buttons = actions.map(([id, label, category, key]) => makeButton(id, label, category, key));
   buttons.push(makeButton('panel:home', 'Início', 'manual', 'start', ButtonStyle.Secondary));
 
