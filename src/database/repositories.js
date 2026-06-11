@@ -52,9 +52,9 @@ async function getProfile() {
   return db.get('SELECT * FROM couple_profile WHERE id = 1');
 }
 
-async function addLoveNote(text) {
+async function addLoveNote(text, imageUrl = null) {
   await db.ready;
-  return db.run('INSERT INTO love_notes (text) VALUES (?)', [text]);
+  return db.run('INSERT INTO love_notes (text, image_url) VALUES (?, ?)', [text, imageUrl || null]);
 }
 
 async function getRandomLoveNote() {

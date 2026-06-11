@@ -54,6 +54,6 @@ module.exports = {
       fields: [{ name: 'Saldo restante', value: `${result.balance} MomoCoins`, inline: true }],
     };
     await respond(interaction, { embeds: [momozinEmbed(embedPayload)] });
-    await publishDiaryEmbed(interaction, embedPayload);
+    await publishDiaryEmbed(interaction, embedPayload, 'mimos');
   },
 };

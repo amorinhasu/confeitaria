@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const { addMemory } = require('../database/repositories');
 const { getAssetPublicUrl } = require('../utils/assets');
 const { publishDiaryEmbed } = require('../utils/channels');
+const { normalizeImageUrl } = require('../utils/images');
 const { getImageAttachmentUrl } = require('../utils/images');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
@@ -45,6 +46,6 @@ module.exports = {
 
 ${description}`,
       image: imageUrl || getAssetPublicUrl('memories_banner'),
-    });
+    }, 'memorias');
   },
 };

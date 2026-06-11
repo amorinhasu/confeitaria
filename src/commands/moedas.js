@@ -33,7 +33,7 @@ module.exports = {
         fields: [{ name: getText('coins_balance_prefix', 'Saldo atual'), value: `${balance} MomoCoins`, inline: true }],
       };
       await respond(interaction, { embeds: [momozinEmbed(embedPayload)] });
-      await publishDiaryEmbed(interaction, embedPayload);
+      await publishDiaryEmbed(interaction, embedPayload, 'estudos');
       return;
     }
 

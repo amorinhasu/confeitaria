@@ -48,21 +48,40 @@ TRIVIA_USER_ID=
 KAIKI_USER_ID=993955981220388894
 PUDINZINHO_ROLE_ID=1509920102911311943
 COMMANDS_CHANNEL_ID=
-MEMORIES_CHANNEL_ID=
+ENTRY_CHANNEL_ID=1505727749631774885
+RECADOS_CHANNEL_ID=1506427566590791773
+MEMORIAS_CHANNEL_ID=1506427787077095505
+CINEMA_CHANNEL_ID=1506427710077927475
+PLAYLIST_CHANNEL_ID=1506427866278269079
+ESTUDOS_CHANNEL_ID=1506427912092385333
+MIMOS_CHANNEL_ID=1511468115597463562
 ```
 
 
 ## Canais de produção
 
-Configure estes IDs no `.env` para organizar o uso em produção:
+Configure estes IDs no `.env` para organizar o Momozin em produção:
 
 ```env
 COMMANDS_CHANNEL_ID=
-MEMORIES_CHANNEL_ID=
+ENTRY_CHANNEL_ID=1505727749631774885
+RECADOS_CHANNEL_ID=1506427566590791773
+MEMORIAS_CHANNEL_ID=1506427787077095505
+CINEMA_CHANNEL_ID=1506427710077927475
+PLAYLIST_CHANNEL_ID=1506427866278269079
+ESTUDOS_CHANNEL_ID=1506427912092385333
+MIMOS_CHANNEL_ID=1511468115597463562
 ```
 
-- `COMMANDS_CHANNEL_ID` limita o uso do Momozin ao canal de comandos.
-- `MEMORIES_CHANNEL_ID` recebe publicações públicas do diário do casal: memórias, CineMomozin, playlist, MomoCoins, mimos e conquistas.
+- `COMMANDS_CHANNEL_ID` limita o uso normal do Momozin ao canal de comandos.
+- `ENTRY_CHANNEL_ID` recebe a mensagem fixa com o botão **Virar Pudinzinho** para liberar o Kaiki.
+- `RECADOS_CHANNEL_ID` recebe recados salvos e recados sorteados/lidos.
+- `MEMORIAS_CHANNEL_ID` recebe memórias e a carta integral do Pudinzinho.
+- `CINEMA_CHANNEL_ID` recebe registros do CineMomozin.
+- `PLAYLIST_CHANNEL_ID` recebe atualizações da playlist do casal.
+- `ESTUDOS_CHANNEL_ID` recebe eventos de foco/estudos e recompensas de MomoCoins por estudo.
+- `MIMOS_CHANNEL_ID` recebe mimos comprados e conquistas, incluindo o recebimento do cargo Pudinzinho.
+- `MEMORIES_CHANNEL_ID` antigo ainda é aceito como fallback para compatibilidade, mas o nome recomendado agora é `MEMORIAS_CHANNEL_ID`.
 
 ## Scripts
 

@@ -41,6 +41,6 @@ module.exports = {
       ],
     };
     await respond(interaction, { embeds: [momozinEmbed(embedPayload)] });
-    await publishDiaryEmbed(interaction, { ...embedPayload, title: `CineMomozin: ${name}` });
+    await publishDiaryEmbed(interaction, { ...embedPayload, title: `CineMomozin: ${name}` }, 'cine');
   },
 };

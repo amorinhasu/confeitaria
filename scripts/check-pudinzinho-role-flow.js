@@ -1,6 +1,7 @@
 process.env.KAIKI_USER_ID ||= '993955981220388894';
 process.env.PUDINZINHO_ROLE_ID ||= '1509920102911311943';
 
+const { isAuthorizedCouple } = require('../src/utils/authorization');
 const { canUsePudinzinhoButton, givePudinzinhoRole } = require('../src/utils/pudinzinhoRole');
 const { kaikiUserId, pudinzinhoRoleId } = require('../src/utils/config');
 const { PUDINZINHO_LETTER_DESCRIPTION, PUDINZINHO_LETTER_TITLE } = require('../src/utils/pudinzinhoLetter');
@@ -15,6 +16,34 @@ async function main() {
   if (!PUDINZINHO_LETTER_DESCRIPTION.endsWith('feliz nosso dia dos namorados.')) throw new Error('Final da carta Pudinzinho foi alterado.');
   if (PUDINZINHO_LETTER_TITLE.length > 256) throw new Error('Título da carta ultrapassa o limite do Discord.');
   if (PUDINZINHO_LETTER_DESCRIPTION.length > 4096) throw new Error('Descrição da carta ultrapassa o limite do Discord.');
+
+
+  const blockedPanel = await isAuthorizedCouple({
+    user: { id: kaikiUserId },
+    isChatInputCommand: () => true,
+    commandName: 'painel',
+    guild: null,
+    member: { roles: { cache: new Map() } },
+  });
+  if (blockedPanel.ok || blockedPanel.reason !== 'kaiki_needs_pudinzinho') throw new Error('Kaiki sem cargo Pudinzinho deve ficar bloqueado do painel.');
+
+  const entryButton = await isAuthorizedCouple({
+    user: { id: kaikiUserId },
+    isChatInputCommand: () => false,
+    customId: 'entry:pudinzinho',
+    guild: null,
+    member: { roles: { cache: new Map() } },
+  });
+  if (!entryButton.ok) throw new Error('Kaiki sem cargo deve poder clicar em Virar Pudinzinho.');
+
+  const releasedPanel = await isAuthorizedCouple({
+    user: { id: kaikiUserId },
+    isChatInputCommand: () => true,
+    commandName: 'painel',
+    guild: null,
+    member: { roles: { cache: new Map([[pudinzinhoRoleId, true]]) } },
+  });
+  if (!releasedPanel.ok || releasedPanel.reason !== 'kaiki_pudinzinho') throw new Error('Kaiki com cargo Pudinzinho deve acessar o painel.');
 
   const botMember = { permissions: { has: () => true }, roles: { highest: { comparePositionTo: () => 1 } } };
   const duplicateResult = await givePudinzinhoRole({

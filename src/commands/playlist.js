@@ -25,7 +25,7 @@ module.exports = {
       const link = interaction.options.getString('link', true);
       await setPlaylist(link);
       await respond(interaction, { embeds: [momozinEmbed({ title: 'Playlist salva', description: getText('playlist_saved', 'Link guardado. Sem Spotify API por enquanto, só o aconchego manual.'), image: getAssetPublicUrl('playlist_banner') })] });
-      await publishDiaryEmbed(interaction, { title: 'Playlist atualizada', description: link, image: getAssetPublicUrl('playlist_banner') });
+      await publishDiaryEmbed(interaction, { title: 'Playlist atualizada', description: link, image: getAssetPublicUrl('playlist_banner') }, 'playlist');
       return;
     }
 

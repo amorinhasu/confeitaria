@@ -78,6 +78,7 @@ async function migrate() {
     CREATE TABLE IF NOT EXISTS love_notes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       text TEXT NOT NULL,
+      image_url TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -136,6 +137,11 @@ async function migrate() {
       coins_awarded INTEGER NOT NULL DEFAULT 0
     );
   `);
+
+  const loveNoteColumns = await all('PRAGMA table_info(love_notes)');
+  if (!loveNoteColumns.some((column) => column.name === 'image_url')) {
+    await run('ALTER TABLE love_notes ADD COLUMN image_url TEXT');
+  }
 
   const memoryColumns = await all('PRAGMA table_info(memories)');
   if (!memoryColumns.some((column) => column.name === 'image_url')) {

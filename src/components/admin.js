@@ -1,8 +1,14 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
 const assetsConfig = require('../../config/assets.json');
 const { getAssetPublicUrl } = require('../utils/assets');
-const { commandsChannelId, memoriesChannelId, adminUserId, kaikiUserId, triviaUserId } = require('../utils/config');
-const { getMemoriesChannel } = require('../utils/channels');
+const {
+  adminUserId,
+  commandsChannelId,
+  entryChannelId,
+  kaikiUserId,
+  triviaUserId,
+} = require('../utils/config');
+const { CHANNEL_DESTINATIONS, getConfiguredChannel } = require('../utils/channels');
 const { buttonEmoji, listConfiguredEmojis } = require('../utils/emojis');
 const { momozinEmbed } = require('../utils/theme');
 const { getPudinzinhoRoleDiagnostics } = require('../utils/pudinzinhoRole');
@@ -19,6 +25,28 @@ const {
 
 const ADMIN_TABS = ['sistema', 'configuracao', 'emojis', 'assets', 'manual', 'banco', 'auditoria'];
 
+
+const ADMIN_CHANNELS = {
+  entry: { envName: 'ENTRY_CHANNEL_ID', id: entryChannelId, label: 'Entrada Pudinzinho' },
+  commands: { envName: 'COMMANDS_CHANNEL_ID', id: commandsChannelId, label: 'Comandos' },
+  ...CHANNEL_DESTINATIONS,
+};
+
+async function getAdminChannelStatusEntries(guild) {
+  const entries = [];
+  for (const [key, channel] of Object.entries(ADMIN_CHANNELS)) {
+    const status = await getChannelStatus(guild, channel.id);
+    entries.push({ key, ...channel, ...status });
+  }
+  return entries;
+}
+
+function formatChannelStatus(entry) {
+  const ok = entry.configured && entry.found && entry.textBased;
+  const status = ok ? 'ok' : 'partial';
+  const target = entry.id ? `<#${entry.id}>` : 'não configurado';
+  return statusLabel(status, `${entry.label}: ${target}`);
+}
 
 async function getChannelStatus(guild, channelId) {
   if (!channelId) return { configured: false, found: false, textBased: false };
@@ -83,8 +111,7 @@ function getEmojiStatusEntries() {
 }
 
 async function createSystemEmbed(interaction = null) {
-  const commandsChannel = await getChannelStatus(interaction?.guild || null, commandsChannelId);
-  const memoriesChannel = await getChannelStatus(interaction?.guild || null, memoriesChannelId);
+  const channelEntries = await getAdminChannelStatusEntries(interaction?.guild || null);
   const lines = [
     statusLabel('ok', 'Banco SQLite: Funcionando'),
     statusLabel('ok', 'Painel: Funcionando'),
@@ -99,8 +126,7 @@ async function createSystemEmbed(interaction = null) {
     statusLabel('ok', 'MomoCoins: Funcionando'),
     statusLabel('ok', 'Emojis: Com fallback seguro'),
     statusLabel(getAssetStatusEntries().some((asset) => asset.status !== 'ok') ? 'partial' : 'ok', 'Assets: Revisados'),
-    statusLabel(commandsChannel.configured && commandsChannel.found && commandsChannel.textBased ? 'ok' : 'partial', `Canal de comandos: ${commandsChannelId ? `<#${commandsChannelId}>` : 'não configurado'}`),
-    statusLabel(memoriesChannel.configured && memoriesChannel.found && memoriesChannel.textBased ? 'ok' : 'partial', `Canal diário: ${memoriesChannelId ? `<#${memoriesChannelId}>` : 'não configurado'}`),
+    ...channelEntries.map(formatChannelStatus),
   ];
 
   return momozinEmbed({
@@ -201,15 +227,14 @@ async function createDiagnosticEmbed(interaction = null) {
   const problems = [];
   const assets = getAssetStatusEntries();
   const emojis = getEmojiStatusEntries();
-  const commandsChannel = await getChannelStatus(interaction?.guild || null, commandsChannelId);
-  const memoriesChannel = await getChannelStatus(interaction?.guild || null, memoriesChannelId);
+  const channelEntries = await getAdminChannelStatusEntries(interaction?.guild || null);
   assets.filter((asset) => asset.status !== 'ok').forEach((asset) => problems.push(`⚠️ asset ${asset.key}: ${asset.text}`));
   emojis.filter((item) => item.status !== 'ok').forEach((item) => problems.push(`⚠️ emoji ${item.category}.${item.key}: fallback Unicode`));
   if (manualPages.length < 9) problems.push('⚠️ manual com páginas incompletas');
-  if (!commandsChannel.configured) problems.push('⚠️ COMMANDS_CHANNEL_ID não configurado');
-  else if (!commandsChannel.found || !commandsChannel.textBased) problems.push('⚠️ COMMANDS_CHANNEL_ID inválido ou não textual');
-  if (!memoriesChannel.configured) problems.push('⚠️ MEMORIES_CHANNEL_ID não configurado');
-  else if (!memoriesChannel.found || !memoriesChannel.textBased) problems.push('⚠️ MEMORIES_CHANNEL_ID inválido ou não textual');
+  channelEntries.forEach((entry) => {
+    if (!entry.configured) problems.push(`⚠️ ${entry.envName} não configurado`);
+    else if (!entry.found || !entry.textBased) problems.push(`⚠️ ${entry.envName} inválido ou não textual`);
+  });
 
   return momozinEmbed({
     title: getText('admin_diagnostic_title', 'Diagnóstico do Momozin'),
@@ -231,9 +256,8 @@ async function createAuditEmbed(interaction) {
   const assetsWithoutUrl = getAssetStatusEntries().filter((asset) => asset.status !== 'ok').map((asset) => asset.key);
   const invalidEmojis = getEmojiStatusEntries().filter((item) => item.status !== 'ok').map((item) => `${item.category}.${item.key}`);
   const pudinzinho = await getPudinzinhoRoleDiagnostics(interaction?.guild || null);
-  const commandsChannel = await getChannelStatus(interaction?.guild || null, commandsChannelId);
-  const memoriesChannel = await getChannelStatus(interaction?.guild || null, memoriesChannelId);
-  const resolvedMemoriesChannel = await getMemoriesChannel(interaction?.guild || null);
+  const channelEntries = await getAdminChannelStatusEntries(interaction?.guild || null);
+  const resolvedMemoriesChannel = await getConfiguredChannel(interaction?.guild || null, 'memorias');
 
   const botPermissions = interaction?.guild?.members?.me?.permissions;
   const botCanManageRoles = botPermissions ? botPermissions.has(PermissionFlagsBits.ManageRoles) : pudinzinho.botCanManageRoles;
@@ -244,8 +268,8 @@ async function createAuditEmbed(interaction) {
       `IDs do casal definidos no .env: ${triviaUserId && kaikiUserId ? 'sim' : 'não'}`,
       `IDs carregados: TRIVIA=${triviaUserId || 'não definido'} | KAIKI=${kaikiUserId || 'não definido'}`,
       `Admin carregado: ${adminUserId || 'não definido'}`,
-      `COMMANDS_CHANNEL_ID: ${commandsChannelId ? `<#${commandsChannelId}> (${commandsChannel.found && commandsChannel.textBased ? 'ok' : 'verificar'})` : 'não definido'}`,
-      `MEMORIES_CHANNEL_ID: ${memoriesChannelId ? `<#${memoriesChannelId}> (${resolvedMemoriesChannel && memoriesChannel.found && memoriesChannel.textBased ? 'ok' : 'verificar'})` : 'não definido'}`,
+      ...channelEntries.map((entry) => `${entry.envName}: ${entry.id ? `<#${entry.id}> (${entry.found && entry.textBased ? 'ok' : 'verificar'})` : 'não definido'}`),
+      `Canal de memórias resolvido: ${resolvedMemoriesChannel ? 'sim' : 'não'}`,
       'Banco SQLite: acessível',
       `Recados: ${notes}`,
       `Memórias: ${memories}`,

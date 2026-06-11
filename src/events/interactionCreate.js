@@ -32,7 +32,7 @@ const { publishLoveNoteReadDiaryEntry, publishLoveNoteSavedDiaryEntry, publishPu
 const { createPudinzinhoLetterEmbed } = require('../utils/pudinzinhoLetter');
 const { givePudinzinhoRole } = require('../utils/pudinzinhoRole');
 const { buttonEmoji, withEmoji } = require('../utils/emojis');
-const { getImageAttachmentUrl } = require('../utils/images');
+const { getImageAttachmentUrl, normalizeImageUrl } = require('../utils/images');
 const { respondEphemeral, scheduleDefer } = require('../utils/interactions');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
@@ -46,7 +46,7 @@ async function publishMemoryDiaryEntry(interaction, memory) {
 
 ${memory.description}`,
     image: memory.image_url || getAssetPublicUrl('memories_banner'),
-  });
+  }, 'memorias');
 }
 
 async function publishMovieDiaryEntry(interaction, movie) {
@@ -60,7 +60,7 @@ async function publishMovieDiaryEntry(interaction, movie) {
       { name: 'Notas', value: `Trívia: ${movie.triviaRating}/10
 Kaiki: ${movie.kaikiRating}/10`, inline: true },
     ],
-  });
+  }, 'cine');
 }
 
 async function publishPlaylistDiaryEntry(interaction, link) {
@@ -68,11 +68,15 @@ async function publishPlaylistDiaryEntry(interaction, link) {
     title: 'Playlist atualizada',
     description: link,
     image: getAssetPublicUrl('playlist_banner'),
-  });
+  }, 'playlist');
+}
+
+async function publishStudyDiaryEntry(interaction, { title, description }) {
+  await publishDiaryEmbed(interaction, { title, description, image: getAssetPublicUrl('study_banner') }, 'estudos');
 }
 
 async function publishCoinsDiaryEntry(interaction, { title, description }) {
-  await publishDiaryEmbed(interaction, { title, description, image: getAssetPublicUrl('coins_banner') });
+  await publishDiaryEmbed(interaction, { title, description, image: getAssetPublicUrl('coins_banner') }, 'estudos');
 }
 
 async function publishGiftDiaryEntry(interaction, result) {
@@ -81,11 +85,11 @@ async function publishGiftDiaryEntry(interaction, result) {
     description: `${result.item.labelText} ${getText('gift_bought', 'resgatado com sucesso!')}
 Saldo restante: ${result.balance} MomoCoins`,
     image: getAssetPublicUrl('gifts_banner'),
-  });
+  }, 'mimos');
 }
 
 async function publishAchievementDiaryEntry(interaction, { title, description }) {
-  await publishDiaryEmbed(interaction, { title, description, image: getAssetPublicUrl('profile_banner') });
+  await publishDiaryEmbed(interaction, { title, description, image: getAssetPublicUrl('profile_banner') }, 'mimos');
 }
 
 function createMemoryEmbed(memory, useBannerFallback = false) {
@@ -171,14 +175,17 @@ async function safeReply(interaction, payload, ephemeral = true) {
   return interaction.reply({ ...payload, ephemeral });
 }
 
-async function denyUnauthorized(interaction) {
-  await respondEphemeral(interaction, withEmoji('feedback', 'warning', 'Esse cantinho é reservado para a Trívia e o Kaiki.'));
+async function denyUnauthorized(interaction, reason) {
+  const message = reason === 'kaiki_needs_pudinzinho'
+    ? 'Kaiki, antes de usar o Momozin você precisa clicar em **Virar Pudinzinho** no canal de entrada.'
+    : 'Esse cantinho é reservado para a Trívia e o Kaiki.';
+  await respondEphemeral(interaction, withEmoji('feedback', 'warning', message));
 }
 
 async function ensureAuthorized(interaction) {
   const authorization = await isAuthorizedCouple(interaction);
   if (authorization.ok) return true;
-  await denyUnauthorized(interaction);
+  await denyUnauthorized(interaction, authorization.reason);
   return false;
 }
 
@@ -223,7 +230,7 @@ async function handlePanelButton(interaction) {
   if (areaId === 'recados' && action === 'random') {
     const note = await getRandomLoveNote();
     await interaction.editReply(note
-      ? { embeds: [momozinEmbed({ title: 'Frase do dia', description: note.text, image: getAssetPublicUrl('love_notes_banner') })] }
+      ? { embeds: [momozinEmbed({ title: 'Frase do dia', description: note.text, image: note.image_url || getAssetPublicUrl('love_notes_banner') })] }
       : { content: withEmoji('recados', 'letter', getText('recado_empty', 'Ainda não tem recados salvos. Use `/recado adicionar` primeiro.')) });
     if (note) await publishLoveNoteReadDiaryEntry(interaction, note);
     return;
@@ -264,6 +271,7 @@ async function handlePanelButton(interaction) {
     await interaction.editReply(result.created
       ? { embeds: [momozinEmbed({ title: 'Estudo iniciado', description: getText('study_started', 'Cronômetro ligado para o foco do casal render MomoCoins.'), image: getAssetPublicUrl('study_banner') })] }
       : { content: withEmoji('estudos', 'book', getText('study_already_open', 'Já existe uma sessão de estudo aberta. Finalize antes de iniciar outra, panquequinha.')) });
+    if (result.created) await publishStudyDiaryEntry(interaction, { title: 'Foco do casal iniciado', description: 'Uma sessão de estudos foi iniciada no Momozin.' });
     return;
   }
 
@@ -303,23 +311,26 @@ async function handlePanelButton(interaction) {
     return;
   }
 
-  if (areaId === 'perfil' && action === 'pudinzinho') {
-    const result = await givePudinzinhoRole(interaction);
-    if (result.ok && result.code === 'added') {
-      await interaction.editReply({ content: result.message, embeds: [createPudinzinhoLetterEmbed()] });
-      await publishAchievementDiaryEntry(interaction, { title: 'Cargo Pudinzinho recebido', description: 'Kaiki recebeu o cargo Pudinzinho no Momozin pela primeira vez.' });
-      await publishPudinzinhoLetterDiaryEntry(interaction);
-      return;
-    }
-
-    await interaction.editReply({ content: result.message });
-    return;
-  }
+  if (areaId === 'perfil' && action === 'pudinzinho') return handlePudinzinhoButton(interaction);
 
   if (areaId === 'perfil') {
     const mode = action === 'achievements' ? 'achievements' : action === 'status' ? 'status' : 'full';
     await interaction.editReply({ embeds: [profileEmbed(await getProfile(), mode)] });
   }
+}
+
+
+async function handlePudinzinhoButton(interaction) {
+  if (!interaction.deferred && !interaction.replied) await interaction.deferReply({ ephemeral: true });
+  const result = await givePudinzinhoRole(interaction);
+  if (result.ok && result.code === 'added') {
+    await interaction.editReply({ content: result.message, embeds: [createPudinzinhoLetterEmbed()] });
+    await publishAchievementDiaryEntry(interaction, { title: 'Cargo Pudinzinho recebido', description: 'Kaiki recebeu o cargo Pudinzinho no Momozin pela primeira vez.' });
+    await publishPudinzinhoLetterDiaryEntry(interaction);
+    return;
+  }
+
+  await interaction.editReply({ content: result.message });
 }
 
 async function handleManualButton(interaction) {
@@ -372,9 +383,10 @@ async function handleModalSubmit(interaction) {
 
   if (areaId === 'recados' && action === 'add') {
     const text = interaction.fields.getTextInputValue('text');
-    await addLoveNote(text);
-    await interaction.editReply({ embeds: [momozinEmbed({ title: 'Recado salvo', description: getText('recado_saved', 'O Momozin guardou essa frase no potinho azul.'), image: getAssetPublicUrl('love_notes_banner') })] });
-    await publishLoveNoteSavedDiaryEntry(interaction, text);
+    const imageUrl = normalizeImageUrl(interaction.fields.getTextInputValue('imageUrl'));
+    await addLoveNote(text, imageUrl);
+    await interaction.editReply({ embeds: [momozinEmbed({ title: 'Recado salvo', description: getText('recado_saved', 'O Momozin guardou essa frase no potinho azul.'), image: imageUrl || getAssetPublicUrl('love_notes_banner') })] });
+    await publishLoveNoteSavedDiaryEntry(interaction, text, imageUrl);
     return;
   }
 
@@ -472,6 +484,7 @@ module.exports = {
       if (!(await enforceCommandsChannel(interaction))) return;
       if (interaction.isButton() && interaction.customId.startsWith('admin:')) return await handleAdminButton(interaction);
       if ((interaction.isButton() || interaction.isModalSubmit()) && !(await ensureAuthorized(interaction))) return;
+      if (interaction.isButton() && interaction.customId === 'entry:pudinzinho') return await handlePudinzinhoButton(interaction);
       if (interaction.isButton() && interaction.customId.startsWith('panel:')) return await handlePanelButton(interaction);
       if (interaction.isButton() && interaction.customId.startsWith('manual:')) return await handleManualButton(interaction);
       if (interaction.isButton() && interaction.customId.startsWith('gift:buy:')) return await handleGiftButton(interaction);

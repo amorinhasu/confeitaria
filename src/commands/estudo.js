@@ -28,6 +28,7 @@ module.exports = {
         return;
       }
       await respond(interaction, { embeds: [momozinEmbed({ title: 'Estudo iniciado', description: getText('study_started', 'Cronômetro ligado para o foco do casal render MomoCoins.') })] });
+      await publishDiaryEmbed(interaction, { title: 'Foco do casal iniciado', description: 'Uma sessão de estudos foi iniciada no Momozin.', image: getAssetPublicUrl('study_banner') }, 'estudos');
       return;
     }
 
@@ -49,6 +50,6 @@ module.exports = {
     };
     await respond(interaction, { embeds: [momozinEmbed(embedPayload)] });
     await publishDiaryEmbed(interaction, { title: 'MomoCoins por estudo', description: `+${result.coinsAwarded} MomoCoins por ${result.minutes} minuto(s) de foco.
-Saldo atual: ${result.balance} MomoCoins.`, image: getAssetPublicUrl('coins_banner') });
+Saldo atual: ${result.balance} MomoCoins.`, image: getAssetPublicUrl('coins_banner') }, 'estudos');
   },
 };

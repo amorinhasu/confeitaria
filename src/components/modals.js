@@ -9,7 +9,10 @@ function createLoveNoteModal() {
   return new ModalBuilder()
     .setCustomId('modal:recados:add')
     .setTitle('Adicionar recado')
-    .addComponents(input('text', 'Texto do recado', TextInputStyle.Paragraph, true, 'Escreva algo fofo, engraçado ou de madrugada...'));
+    .addComponents(
+      input('text', 'Texto do recado', TextInputStyle.Paragraph, true, 'Escreva algo fofo, engraçado ou de madrugada...'),
+      input('imageUrl', 'Imagem opcional', TextInputStyle.Short, false, 'https://...'),
+    );
 }
 
 function createMemoryModal() {

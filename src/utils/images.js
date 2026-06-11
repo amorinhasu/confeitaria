@@ -7,6 +7,17 @@ function hasImageExtension(url = '') {
   }
 }
 
+function normalizeImageUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  try {
+    const parsed = new URL(trimmed);
+    return ['http:', 'https:'].includes(parsed.protocol) ? trimmed : null;
+  } catch {
+    return null;
+  }
+}
+
 function isImageAttachment(attachment) {
   if (!attachment) return false;
   const contentType = attachment.contentType || '';
@@ -17,4 +28,4 @@ function getImageAttachmentUrl(attachment) {
   return isImageAttachment(attachment) ? attachment.url : null;
 }
 
-module.exports = { getImageAttachmentUrl, hasImageExtension, isImageAttachment };
+module.exports = { getImageAttachmentUrl, hasImageExtension, isImageAttachment, normalizeImageUrl };

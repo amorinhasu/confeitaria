@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const { addLoveNote, getRandomLoveNote } = require('../database/repositories');
 const { getAssetPublicUrl } = require('../utils/assets');
 const { publishLoveNoteReadDiaryEntry, publishLoveNoteSavedDiaryEntry } = require('../utils/diary');
+const { normalizeImageUrl } = require('../utils/images');
 const { withEmoji } = require('../utils/emojis');
 const { getText } = require('../utils/texts');
 const { momozinEmbed } = require('../utils/theme');
@@ -14,7 +15,8 @@ module.exports = {
     .addSubcommand((subcommand) => subcommand
       .setName('adicionar')
       .setDescription('Salva uma mensagem romântica ou engraçada.')
-      .addStringOption((option) => option.setName('texto').setDescription('Texto do recado.').setRequired(true)))
+      .addStringOption((option) => option.setName('texto').setDescription('Texto do recado.').setRequired(true))
+      .addStringOption((option) => option.setName('image_url').setDescription('URL opcional de imagem para o recado.').setRequired(false)))
     .addSubcommand((subcommand) => subcommand
       .setName('sortear')
       .setDescription('Sorteia um recado salvo como frase do dia.')),
@@ -23,9 +25,10 @@ module.exports = {
 
     if (subcommand === 'adicionar') {
       const text = interaction.options.getString('texto', true);
-      await addLoveNote(text);
-      await respond(interaction, { embeds: [momozinEmbed({ title: 'Recado salvo', description: getText('recado_saved', 'O Momozin guardou essa frase no potinho azul.'), image: getAssetPublicUrl('love_notes_banner') })] });
-      await publishLoveNoteSavedDiaryEntry(interaction, text);
+      const imageUrl = normalizeImageUrl(interaction.options.getString('image_url'));
+      await addLoveNote(text, imageUrl);
+      await respond(interaction, { embeds: [momozinEmbed({ title: 'Recado salvo', description: getText('recado_saved', 'O Momozin guardou essa frase no potinho azul.'), image: imageUrl || getAssetPublicUrl('love_notes_banner') })] });
+      await publishLoveNoteSavedDiaryEntry(interaction, text, imageUrl);
       return;
     }
 
@@ -35,7 +38,7 @@ module.exports = {
       return;
     }
 
-    await respond(interaction, { embeds: [momozinEmbed({ title: 'Frase do dia', description: note.text, image: getAssetPublicUrl('love_notes_banner') })] });
+    await respond(interaction, { embeds: [momozinEmbed({ title: 'Frase do dia', description: note.text, image: note.image_url || getAssetPublicUrl('love_notes_banner') })] });
     await publishLoveNoteReadDiaryEntry(interaction, note);
   },
 };
