@@ -21,6 +21,7 @@ const {
   countMovies,
   getCoins,
   getProfile,
+  getStudyStats,
 } = require('../database/repositories');
 
 const ADMIN_TABS = ['sistema', 'configuracao', 'emojis', 'assets', 'manual', 'banco', 'auditoria'];
@@ -86,6 +87,7 @@ function createAdminRows(activeTab = 'sistema') {
       makeButton('admin:banco', 'Banco', 'momocoins', 'coin', activeTab === 'banco' ? ButtonStyle.Primary : ButtonStyle.Secondary),
       makeButton('admin:auditoria', 'Auditoria', 'feedback', 'success', activeTab === 'auditoria' ? ButtonStyle.Primary : ButtonStyle.Secondary),
       makeButton('admin:diagnostico', 'Executar Diagnóstico', 'feedback', 'warning', ButtonStyle.Danger),
+      makeButton('admin:reset_estudo', 'Resetar Estudo', 'estudos', 'book', ButtonStyle.Danger),
     ),
   ];
 }
@@ -202,12 +204,13 @@ function createManualAdminEmbed() {
 }
 
 async function createDatabaseEmbed() {
-  const [notes, memories, movies, balance, gifts] = await Promise.all([
+  const [notes, memories, movies, balance, gifts, studyStats] = await Promise.all([
     countLoveNotes(),
     countMemories(),
     countMovies(),
     getCoins(),
     countGifts(),
+    getStudyStats(),
   ]);
 
   return momozinEmbed({
@@ -219,6 +222,7 @@ async function createDatabaseEmbed() {
       `Quantidade de filmes: ${movies}`,
       `Saldo atual de moedas: ${balance}`,
       `Quantidade de mimos comprados: ${gifts}`,
+      `Sessão de estudo aberta: ${studyStats.open ? `sim (${studyStats.open.subject || 'sem tema'})` : 'não'}`,
     ].join('\n'),
   });
 }
@@ -245,12 +249,13 @@ async function createDiagnosticEmbed(interaction = null) {
 
 
 async function createAuditEmbed(interaction) {
-  const [notes, memories, movies, balance, gifts] = await Promise.all([
+  const [notes, memories, movies, balance, gifts, studyStats] = await Promise.all([
     countLoveNotes(),
     countMemories(),
     countMovies(),
     getCoins(),
     countGifts(),
+    getStudyStats(),
   ]);
 
   const assetsWithoutUrl = getAssetStatusEntries().filter((asset) => asset.status !== 'ok').map((asset) => asset.key);
@@ -276,6 +281,7 @@ async function createAuditEmbed(interaction) {
       `Filmes: ${movies}`,
       `Mimos comprados: ${gifts}`,
       `Saldo MomoCoins: ${balance}`,
+      `Sessão de estudo aberta: ${studyStats.open ? `sim (${studyStats.open.subject || 'sem tema'})` : 'não'}`,
       `Assets sem URL pública: ${assetsWithoutUrl.length ? assetsWithoutUrl.join(', ') : 'nenhum'}`,
       `Emojis em fallback/inválidos: ${invalidEmojis.length ? invalidEmojis.slice(0, 12).join(', ') : 'nenhum'}`,
       `Permissão Gerenciar Cargos: ${botCanManageRoles ? 'sim' : 'não/indisponível'}`,

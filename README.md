@@ -14,7 +14,7 @@ Primeira versão do **Momozin**, um bot privado de casal para Discord feito para
 - Playlist salva manualmente por link.
 - MomoCoins, foco do casal e loja de mimos.
 
-> Spotify API e TMDB ainda **não** foram implementados. A chave TMDB fica preparada no `.env` para uma versão futura.
+> Spotify API ainda **não** foi implementada. O CineMomozin já pode usar `TMDB_API_KEY` para sugerir filmes/séries com ano, sinopse, nota e poster antes de salvar pelo painel.
 
 ## Requisitos
 
@@ -40,7 +40,7 @@ Preencha o `.env`:
 DISCORD_TOKEN=seu_token_do_bot
 DISCORD_CLIENT_ID=1510891897176985611
 DISCORD_GUILD_ID=1505727748822270144
-TMDB_API_KEY=sua_chave_tmdb_para_versao_futura
+TMDB_API_KEY=sua_chave_tmdb_opcional_para_cine
 DATABASE_URL=./data/momozin.sqlite
 AUTO_DEPLOY_COMMANDS=false
 ADMIN_USER_ID=

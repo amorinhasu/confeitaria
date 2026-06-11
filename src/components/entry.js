@@ -30,15 +30,26 @@ async function ensurePudinzinhoEntryMessage(client, channelId) {
     const channel = await client.channels.fetch(channelId);
     if (!channel?.isTextBased?.()) return false;
 
-    const recentMessages = await channel.messages.fetch({ limit: 25 }).catch(() => null);
+    const entryPayload = { embeds: [createPudinzinhoEntryEmbed()], components: createPudinzinhoEntryRows() };
+    const recentMessages = await channel.messages.fetch({ limit: 50, cache: false }).catch((error) => {
+      console.warn('Não foi possível buscar mensagens recentes da entrada Pudinzinho; tentando publicar uma nova.', error);
+      return null;
+    });
     const existingMessage = recentMessages?.find((message) => {
       if (message.author?.id !== client.user?.id) return false;
       return message.components?.some((row) => row.components?.some((component) => component.customId === PUDINZINHO_ENTRY_CUSTOM_ID));
     });
 
-    if (existingMessage) return true;
+    if (existingMessage) {
+      try {
+        await existingMessage.edit(entryPayload);
+        return true;
+      } catch (error) {
+        console.warn('Mensagem de entrada Pudinzinho encontrada, mas não foi possível atualizar; publicando uma nova.', error);
+      }
+    }
 
-    await channel.send({ embeds: [createPudinzinhoEntryEmbed()], components: createPudinzinhoEntryRows() });
+    await channel.send(entryPayload);
     return true;
   } catch (error) {
     console.error('Erro ao publicar mensagem de entrada Pudinzinho:', error);

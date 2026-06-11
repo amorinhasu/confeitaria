@@ -6,6 +6,7 @@ const { databasePath } = require('../utils/config');
 fs.mkdirSync(path.dirname(databasePath), { recursive: true });
 
 const sqlite = new sqlite3.Database(databasePath);
+let transactionLock = Promise.resolve();
 
 function exec(sql) {
   return new Promise((resolve, reject) => {
@@ -44,20 +45,32 @@ function all(sql, params = []) {
 }
 
 async function transaction(callback) {
-  await ready;
-  await exec('BEGIN IMMEDIATE TRANSACTION');
+  const previousTransaction = transactionLock;
+  let releaseTransaction;
+  transactionLock = new Promise((resolve) => {
+    releaseTransaction = resolve;
+  });
+
+  await previousTransaction;
 
   try {
-    const result = await callback({ all, exec, get, run });
-    await exec('COMMIT');
-    return result;
-  } catch (error) {
+    await ready;
+    await exec('BEGIN IMMEDIATE TRANSACTION');
+
     try {
-      await exec('ROLLBACK');
-    } catch (rollbackError) {
-      console.error('Erro ao desfazer transação SQLite:', rollbackError);
+      const result = await callback({ all, exec, get, run });
+      await exec('COMMIT');
+      return result;
+    } catch (error) {
+      try {
+        await exec('ROLLBACK');
+      } catch (rollbackError) {
+        console.error('Erro ao desfazer transação SQLite:', rollbackError);
+      }
+      throw error;
     }
-    throw error;
+  } finally {
+    releaseTransaction();
   }
 }
 

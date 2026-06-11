@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, StringSelectMenuBuilder } = require('discord.js');
 const { createManualHomeEmbed, createManualHomeRows, createManualPageEmbed, createManualPageRows, getManualPage } = require('../components/manual');
 const { createAdminEmbed, createAdminRows } = require('../components/admin');
 const { createAreaEmbed, createAreaRows, createPanelEmbed, createPanelRows } = require('../components/panel');
@@ -13,6 +13,7 @@ const {
   finishStudySession,
   pauseStudySession,
   resumeStudySession,
+  resetOpenStudySession,
   getCoins,
   getPlaylist,
   getProfile,
@@ -39,6 +40,15 @@ const { buttonEmoji, withEmoji } = require('../utils/emojis');
 const { getImageAttachmentUrl, normalizeImageUrl } = require('../utils/images');
 const { respondEphemeral, scheduleDefer } = require('../utils/interactions');
 const { getText } = require('../utils/texts');
+const {
+  createPendingTmdbChoice,
+  createTmdbComment,
+  consumePendingTmdbChoice,
+  isTmdbConfigured,
+  searchTmdbTitles,
+  tmdbSelectDescription,
+  truncate,
+} = require('../utils/tmdb');
 const { momozinEmbed } = require('../utils/theme');
 
 
@@ -57,12 +67,15 @@ async function publishMovieDiaryEntry(interaction, movie) {
   await publishDiaryEmbed(interaction, {
     title: `CineMomozin: ${movie.name}`,
     description: movie.comment || 'Novo filme/série registrado no CineMomozin.',
-    image: getAssetPublicUrl('cine_banner'),
+    image: movie.posterUrl || getAssetPublicUrl('cine_banner'),
     fields: [
       { name: 'Tipo', value: movie.type, inline: true },
       { name: 'Plataforma', value: movie.platform, inline: true },
       { name: 'Notas', value: `Trívia: ${movie.triviaRating}/10
 Kaiki: ${movie.kaikiRating}/10`, inline: true },
+      ...(movie.tmdb ? [
+        { name: 'TMDB', value: `${movie.tmdb.year} • ${movie.tmdb.voteAverage === null ? 'sem nota' : `${movie.tmdb.voteAverage}/10`}`, inline: true },
+      ] : []),
     ],
   }, 'cine');
 }
@@ -87,6 +100,107 @@ function cineRandomLabel(action) {
   if (action === 'random_movie') return { kind: 'movie', title: 'Filme sorteado', empty: 'Ainda não tem filme cadastrado para sortear.' };
   if (action === 'random_series') return { kind: 'series', title: 'Série sorteada', empty: 'Ainda não tem série cadastrada para sortear.' };
   return { kind: 'all', title: 'CineMomozin sorteou', empty: 'Ainda não tem filme ou série no CineMomozin para sortear.' };
+}
+
+function tmdbOptionLabel(selection) {
+  return truncate(`${selection.title} (${selection.year})`, 100);
+}
+
+function createTmdbChoiceRows(token, results) {
+  const select = new StringSelectMenuBuilder()
+    .setCustomId(`cine:tmdb:select:${token}`)
+    .setPlaceholder('Escolha o resultado correto do TMDB')
+    .addOptions(results.map((result, index) => ({
+      label: tmdbOptionLabel(result),
+      description: tmdbSelectDescription(result),
+      value: String(index),
+    })));
+
+  const skipButton = new ButtonBuilder()
+    .setCustomId(`cine:tmdb:skip:${token}`)
+    .setLabel('Salvar sem TMDB')
+    .setStyle(ButtonStyle.Secondary);
+
+  return [
+    new ActionRowBuilder().addComponents(select),
+    new ActionRowBuilder().addComponents(skipButton),
+  ];
+}
+
+function createTmdbChoiceEmbed(draft, results) {
+  return momozinEmbed({
+    title: 'Escolha no TMDB',
+    description: `Encontrei opções para **${draft.name}**. Escolha a correta antes de salvar no CineMomozin, ou salve sem TMDB se nenhuma for a certa.`,
+    image: results[0]?.posterUrl || getAssetPublicUrl('cine_banner'),
+    fields: results.map((result, index) => ({
+      name: truncate(`${index + 1}. ${result.title} (${result.year})`, 256),
+      value: `${result.type} • Nota TMDB: ${result.voteAverage === null ? 'sem nota' : `${result.voteAverage}/10`}
+${truncate(result.overview, 220)}`,
+      inline: false,
+    })),
+  });
+}
+
+function createMovieSavedPayload(movie, { title = 'CineMomozin atualizado', image } = {}) {
+  return momozinEmbed({
+    title,
+    description: `${movie.name} ${getText('cine_saved', 'entrou para a listinha azul do casal.')}`,
+    image: image || movie.posterUrl || getAssetPublicUrl('cine_banner'),
+    fields: [
+      { name: 'Tipo', value: movie.type, inline: true },
+      { name: 'Plataforma', value: movie.platform, inline: true },
+      { name: 'Notas', value: `Trívia: ${movie.triviaRating}/10
+Kaiki: ${movie.kaikiRating}/10`, inline: true },
+      ...(movie.tmdb ? [
+        { name: 'TMDB', value: `${movie.tmdb.year} • ${movie.tmdb.voteAverage === null ? 'sem nota' : `${movie.tmdb.voteAverage}/10`}`, inline: true },
+        { name: 'Sinopse', value: truncate(movie.tmdb.overview, 500), inline: false },
+      ] : []),
+    ],
+  });
+}
+
+async function saveCineMovie(interaction, movie, { update = false } = {}) {
+  await addMovie(movie.name, movie.type, movie.platform, movie.triviaRating, movie.kaikiRating, movie.comment);
+  const payload = { embeds: [createMovieSavedPayload(movie)] };
+  if (update) await interaction.update({ ...payload, components: [] });
+  else await interaction.editReply(payload);
+  await publishMovieDiaryEntry(interaction, movie);
+}
+
+async function handleCineTmdbSelect(interaction) {
+  const token = interaction.customId.split(':').pop();
+  const pending = consumePendingTmdbChoice(token);
+  if (!pending || pending.userId !== interaction.user.id) {
+    await interaction.update({ content: withEmoji('feedback', 'warning', 'Essa escolha do TMDB expirou. Abra o CineMomozin e tente adicionar de novo.'), embeds: [], components: [] });
+    return;
+  }
+
+  const selectedIndex = Number(interaction.values?.[0]);
+  const selection = pending.results[selectedIndex];
+  if (!selection) {
+    await interaction.update({ content: withEmoji('feedback', 'warning', 'Não encontrei essa opção do TMDB. Tente adicionar de novo.'), embeds: [], components: [] });
+    return;
+  }
+
+  await saveCineMovie(interaction, {
+    ...pending.draft,
+    name: selection.title,
+    type: selection.type,
+    comment: createTmdbComment(selection),
+    posterUrl: selection.posterUrl,
+    tmdb: selection,
+  }, { update: true });
+}
+
+async function handleCineTmdbSkip(interaction) {
+  const token = interaction.customId.split(':').pop();
+  const pending = consumePendingTmdbChoice(token);
+  if (!pending || pending.userId !== interaction.user.id) {
+    await interaction.update({ content: withEmoji('feedback', 'warning', 'Essa escolha do TMDB expirou. Abra o CineMomozin e tente adicionar de novo.'), embeds: [], components: [] });
+    return;
+  }
+
+  await saveCineMovie(interaction, pending.draft, { update: true });
 }
 
 async function publishPlaylistDiaryEntry(interaction, link) {
@@ -324,7 +438,7 @@ async function handlePanelButton(interaction) {
     const movies = await listMovies(5);
     await interaction.editReply({ embeds: [momozinEmbed({
       title: 'Histórico CineMomozin',
-      description: movies.length ? movies.map((movie) => `**${movie.name}** — ${movie.platform}\nTrívia ${movie.trivia_rating}/10 • Kaiki ${movie.kaiki_rating}/10\n${movie.comment}`).join('\n\n') : 'Ainda não tem filme ou série no CineMomozin.',
+      description: movies.length ? movies.map((movie) => `**${movie.name}** — ${movie.platform}\nTrívia ${movie.trivia_rating}/10 • Kaiki ${movie.kaiki_rating}/10\n${truncate(movie.comment, 220)}`).join('\n\n') : 'Ainda não tem filme ou série no CineMomozin.',
       image: getAssetPublicUrl('cine_banner'),
     })] });
     return;
@@ -477,6 +591,21 @@ async function handleAdminButton(interaction) {
   }
 
   const tab = interaction.customId.split(':')[1] || 'sistema';
+  if (tab === 'reset_estudo') {
+    const result = await resetOpenStudySession('Reset administrativo pelo painel do Momozin');
+    await interaction.update({
+      embeds: [momozinEmbed({
+        title: result.ok ? 'Sessão de estudo resetada' : 'Nenhuma sessão travada',
+        description: result.ok
+          ? `A sessão aberta foi encerrada sem entregar MomoCoins. Tempo total registrado: ${formatDurationAllowZero((result.session.totalSeconds || 0) * 1000)}.`
+          : 'Não existe sessão de estudo aberta para resetar agora.',
+        image: getAssetPublicUrl('study_banner'),
+      })],
+      components: createAdminRows('banco'),
+    });
+    return;
+  }
+
   await interaction.update({ embeds: [await createAdminEmbed(tab, interaction)], components: createAdminRows(tab === 'diagnostico' ? 'sistema' : tab) });
 }
 
@@ -559,19 +688,21 @@ Se quiser anexar uma imagem, envie um PNG, JPG, GIF ou WEBP neste canal em até 
       return;
     }
 
-    const comment = 'Registrado pelo painel do Momozin.';
-    await addMovie(name, type, platform, triviaRating, kaikiRating, comment);
-    await interaction.editReply({ embeds: [momozinEmbed({
-      title: 'CineMomozin atualizado',
-      description: `${name} ${getText('cine_saved', 'entrou para a listinha azul do casal.')}`,
-      image: getAssetPublicUrl('cine_banner'),
-      fields: [
-        { name: 'Tipo', value: type, inline: true },
-        { name: 'Plataforma', value: platform, inline: true },
-        { name: 'Notas', value: `Trívia: ${triviaRating}/10\nKaiki: ${kaikiRating}/10`, inline: true },
-      ],
-    })] });
-    await publishMovieDiaryEntry(interaction, { name, type, platform, triviaRating, kaikiRating, comment });
+    const draft = { name, type, platform, triviaRating, kaikiRating, comment: 'Registrado pelo painel do Momozin.' };
+    if (!isTmdbConfigured()) {
+      await saveCineMovie(interaction, draft);
+      return;
+    }
+
+    const tmdbSearch = await searchTmdbTitles(name);
+    if (!tmdbSearch.ok || tmdbSearch.results.length === 0) {
+      console.warn(`[TMDB] Busca sem opção selecionável para "${name}". Motivo: ${tmdbSearch.reason || 'sem_resultados'}`);
+      await saveCineMovie(interaction, draft);
+      return;
+    }
+
+    const token = createPendingTmdbChoice({ userId: interaction.user.id, draft, results: tmdbSearch.results });
+    await interaction.editReply({ embeds: [createTmdbChoiceEmbed(draft, tmdbSearch.results)], components: createTmdbChoiceRows(token, tmdbSearch.results) });
     return;
   }
 
@@ -624,7 +755,9 @@ module.exports = {
     try {
       if (!(await enforceCommandsChannel(interaction))) return;
       if (interaction.isButton() && interaction.customId.startsWith('admin:')) return await handleAdminButton(interaction);
-      if ((interaction.isButton() || interaction.isModalSubmit()) && !(await ensureAuthorized(interaction))) return;
+      if ((interaction.isButton() || interaction.isModalSubmit() || interaction.isStringSelectMenu()) && !(await ensureAuthorized(interaction))) return;
+      if (interaction.isStringSelectMenu() && interaction.customId.startsWith('cine:tmdb:select:')) return await handleCineTmdbSelect(interaction);
+      if (interaction.isButton() && interaction.customId.startsWith('cine:tmdb:skip:')) return await handleCineTmdbSkip(interaction);
       if (interaction.isButton() && interaction.customId === 'entry:pudinzinho') return await handlePudinzinhoButton(interaction);
       if (interaction.isButton() && interaction.customId.startsWith('panel:')) return await handlePanelButton(interaction);
       if (interaction.isButton() && interaction.customId.startsWith('manual:')) return await handleManualButton(interaction);
