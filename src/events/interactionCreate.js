@@ -17,7 +17,6 @@ const {
   getCoins,
   getPlaylist,
   getProfile,
-  getRandomMovie,
   getRandomLoveNote,
   getRecentCoinTransactions,
   getStudyStats,
@@ -44,6 +43,7 @@ const {
   createPendingTmdbChoice,
   createTmdbComment,
   consumePendingTmdbChoice,
+  getTmdbRecommendation,
   isTmdbConfigured,
   searchTmdbTitles,
   tmdbSelectDescription,
@@ -81,50 +81,30 @@ Kaiki: ${movie.kaikiRating}/10`, inline: true },
 }
 
 
-function tmdbTypeMatchesMovie(movie, result) {
-  const movieType = String(movie.type || '').toLowerCase();
-  if (result.mediaType === 'movie') return movieType.includes('filme') || movieType.includes('movie');
-  if (result.mediaType === 'tv') return movieType.includes('série') || movieType.includes('serie') || movieType.includes('series');
-  return false;
-}
-
-async function getTmdbEnrichmentForMovie(movie) {
-  if (!movie?.name || !isTmdbConfigured()) return null;
-
-  const search = await searchTmdbTitles(movie.name, 5);
-  if (!search.ok || !search.results.length) return null;
-  return search.results.find((result) => tmdbTypeMatchesMovie(movie, result)) || search.results[0];
-}
-
-function createMoviePickEmbed(movie, title = 'CineMomozin sorteou', tmdb = null) {
-  const displayTitle = tmdb?.title || movie.name;
-  const description = tmdb
-    ? `**${displayTitle}**
-${truncate(tmdb.overview, 900)}`
-    : `**${movie.name}**
-${movie.comment || 'Uma recomendação do CineMomozin para assistir juntinhos.'}`;
-
+function createTmdbRecommendationEmbed(recommendation) {
+  const note = recommendation.voteAverage === null ? 'sem nota' : `${recommendation.voteAverage}/10`;
   return momozinEmbed({
-    title,
-    description,
-    image: tmdb?.posterUrl || getAssetPublicUrl('cine_banner'),
+    title: 'O que vamos assistir?',
+    description: `**${recommendation.title}**
+${truncate(recommendation.overview, 900)}`,
+    image: recommendation.posterUrl || getAssetPublicUrl('cine_banner'),
     fields: [
-      ...(tmdb ? [
-        { name: 'Ano', value: tmdb.year, inline: true },
-        { name: 'Nota TMDB', value: tmdb.voteAverage === null ? 'sem nota' : `${tmdb.voteAverage}/10`, inline: true },
-      ] : []),
-      { name: 'Tipo', value: movie.type || tmdb?.type || 'Não informado', inline: true },
-      { name: 'Plataforma', value: movie.platform || 'Não informada', inline: true },
-      { name: 'Notas do casal', value: `Trívia: ${movie.trivia_rating}/10
-Kaiki: ${movie.kaiki_rating}/10`, inline: true },
+      { name: 'Tipo', value: recommendation.type, inline: true },
+      { name: 'Ano', value: recommendation.year, inline: true },
+      { name: 'Nota TMDB', value: note, inline: true },
     ],
   });
 }
 
-function cineRandomLabel(action) {
-  if (action === 'random_movie') return { kind: 'movie', title: 'Filme recomendado', empty: 'Não encontrei filme novo para recomendar. Cadastrem mais opções no CineMomozin.' };
-  if (action === 'random_series') return { kind: 'series', title: 'Série recomendada', empty: 'Não encontrei série nova para recomendar. Cadastrem mais opções no CineMomozin.' };
-  return { kind: 'all', title: 'CineMomozin recomenda', empty: 'Não encontrei conteúdo novo para recomendar. Cadastrem mais opções no CineMomozin.' };
+function cineRecommendationKind(action) {
+  if (action === 'random_movie') return 'movie';
+  if (action === 'random_series') return 'series';
+  return 'all';
+}
+
+function cineRecommendationFallbackMessage(reason) {
+  if (reason === 'not_configured') return 'A recomendação do CineMomozin precisa da busca de catálogo ativa. Por enquanto, use **Adicionar filme/série** e **Ver histórico**.';
+  return 'Não consegui buscar uma recomendação agora. Tente de novo em alguns instantes.';
 }
 
 function tmdbOptionLabel(selection) {
@@ -470,13 +450,11 @@ async function handlePanelButton(interaction) {
     return;
   }
 
-  if (areaId === 'cine' && action?.startsWith('random_')) {
-    const randomConfig = cineRandomLabel(action);
-    const movie = await getRandomMovie(randomConfig.kind);
-    const tmdb = movie ? await getTmdbEnrichmentForMovie(movie) : null;
-    await interaction.editReply(movie
-      ? { embeds: [createMoviePickEmbed(movie, randomConfig.title, tmdb)] }
-      : { content: withEmoji('cine', 'movie', randomConfig.empty) });
+  if (areaId === 'cine' && (action === 'recommend' || action?.startsWith('random_'))) {
+    const recommendation = await getTmdbRecommendation(cineRecommendationKind(action));
+    await interaction.editReply(recommendation.ok
+      ? { embeds: [createTmdbRecommendationEmbed(recommendation.recommendation)] }
+      : { content: withEmoji('cine', 'movie', cineRecommendationFallbackMessage(recommendation.reason)) });
     return;
   }
 

@@ -52,9 +52,7 @@ const areaActions = {
   cine: [
     ['panel:cine:add', 'Adicionar filme/série', 'cine', 'movie'],
     ['panel:cine:list', 'Ver histórico', 'cine', 'movie'],
-    ['panel:cine:random_all', 'Sortear qualquer', 'cine', 'movie'],
-    ['panel:cine:random_movie', 'Sortear filme', 'cine', 'movie'],
-    ['panel:cine:random_series', 'Sortear série', 'cine', 'movie'],
+    ['panel:cine:recommend', 'O que vamos assistir?', 'cine', 'movie'],
   ],
   playlist: [
     ['panel:playlist:set', 'Definir playlist', 'playlist', 'music'],

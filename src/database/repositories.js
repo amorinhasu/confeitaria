@@ -114,28 +114,26 @@ async function listMovies(limit = 5) {
   return db.all('SELECT * FROM movies ORDER BY id DESC LIMIT ?', [limit]);
 }
 
-function cineRecommendationWhere(kind = 'all') {
-  const normalizedKind = String(kind || 'all').toLowerCase();
-  if (normalizedKind === 'movie') return "watched = 0 AND (LOWER(type) LIKE '%filme%' OR LOWER(type) LIKE '%movie%')";
-  if (normalizedKind === 'series') return "watched = 0 AND (LOWER(type) LIKE '%série%' OR LOWER(type) LIKE '%serie%' OR LOWER(type) LIKE '%séries%' OR LOWER(type) LIKE '%series%')";
-  return 'watched = 0';
-}
-
 async function getRandomMovie(kind = 'all') {
   await db.ready;
-  return db.transaction(async (tx) => {
-    const movie = await tx.get(`
+  const normalizedKind = String(kind || 'all').toLowerCase();
+  if (normalizedKind === 'movie') {
+    return db.get(`
       SELECT * FROM movies
-      WHERE ${cineRecommendationWhere(kind)}
+      WHERE LOWER(type) LIKE '%filme%' OR LOWER(type) LIKE '%movie%'
       ORDER BY RANDOM()
       LIMIT 1
     `);
-
-    if (!movie) return null;
-
-    await tx.run('UPDATE movies SET watched = 1, recommended_at = CURRENT_TIMESTAMP WHERE id = ? AND watched = 0', [movie.id]);
-    return { ...movie, watched: 1, recommended_at: new Date().toISOString() };
-  });
+  }
+  if (normalizedKind === 'series') {
+    return db.get(`
+      SELECT * FROM movies
+      WHERE LOWER(type) LIKE '%série%' OR LOWER(type) LIKE '%serie%' OR LOWER(type) LIKE '%séries%' OR LOWER(type) LIKE '%series%'
+      ORDER BY RANDOM()
+      LIMIT 1
+    `);
+  }
+  return db.get('SELECT * FROM movies ORDER BY RANDOM() LIMIT 1');
 }
 
 function dateFromSqlite(value) {

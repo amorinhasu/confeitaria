@@ -38,11 +38,12 @@ function resultPosterUrl(result) {
   return result.poster_path ? `${TMDB_IMAGE_BASE_URL}${result.poster_path}` : null;
 }
 
-function normalizeTmdbResult(result) {
+function normalizeTmdbResult(result, fallbackMediaType = result.media_type) {
+  const mediaType = result.media_type || fallbackMediaType;
   return {
     id: result.id,
-    mediaType: result.media_type,
-    type: mediaTypeLabel(result.media_type),
+    mediaType,
+    type: mediaTypeLabel(mediaType),
     title: resultTitle(result),
     year: resultYear(result),
     overview: result.overview || 'Sem sinopse cadastrada no TMDB.',
@@ -71,7 +72,7 @@ async function searchTmdbTitles(query, limit = 5) {
     const results = (data.results || [])
       .filter((result) => result.media_type === 'movie' || result.media_type === 'tv')
       .slice(0, limit)
-      .map(normalizeTmdbResult);
+      .map((result) => normalizeTmdbResult(result));
 
     return { ok: true, results };
   } catch (error) {
@@ -80,6 +81,87 @@ async function searchTmdbTitles(query, limit = 5) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function fetchTmdbPath(path, params = {}) {
+  const query = new URLSearchParams({
+    api_key: tmdbApiKey,
+    language: 'pt-BR',
+    ...params,
+  });
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TMDB_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(`https://api.themoviedb.org/3${path}?${query.toString()}`, { signal: controller.signal });
+    if (!response.ok) return { ok: false, reason: `http_${response.status}`, results: [] };
+    const data = await response.json();
+    return { ok: true, results: data.results || [] };
+  } catch (error) {
+    console.error('[TMDB] Erro ao buscar recomendações:', error);
+    return { ok: false, reason: error.name === 'AbortError' ? 'timeout' : 'request_failed', results: [] };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function recommendationSources(kind = 'all') {
+  const normalizedKind = String(kind || 'all').toLowerCase();
+  const movieSources = [
+    { path: '/trending/movie/week', mediaType: 'movie' },
+    { path: '/movie/popular', mediaType: 'movie' },
+    { path: '/movie/now_playing', mediaType: 'movie' },
+    { path: '/discover/movie', mediaType: 'movie', params: { sort_by: 'popularity.desc', include_adult: 'false', 'primary_release_date.gte': new Date(Date.now() - 1000 * 60 * 60 * 24 * 180).toISOString().slice(0, 10) } },
+  ];
+  const tvSources = [
+    { path: '/trending/tv/week', mediaType: 'tv' },
+    { path: '/tv/popular', mediaType: 'tv' },
+    { path: '/tv/on_the_air', mediaType: 'tv' },
+    { path: '/discover/tv', mediaType: 'tv', params: { sort_by: 'popularity.desc', 'first_air_date.gte': new Date(Date.now() - 1000 * 60 * 60 * 24 * 180).toISOString().slice(0, 10) } },
+  ];
+
+  if (normalizedKind === 'movie') return movieSources;
+  if (normalizedKind === 'series' || normalizedKind === 'tv') return tvSources;
+  return [
+    { path: '/trending/all/week' },
+    ...movieSources,
+    ...tvSources,
+  ];
+}
+
+function dedupeTmdbResults(results) {
+  const seen = new Set();
+  return results.filter((result) => {
+    const key = `${result.mediaType}:${result.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+async function getTmdbRecommendation(kind = 'all') {
+  if (!isTmdbConfigured()) return { ok: false, reason: 'not_configured', recommendation: null };
+
+  const results = [];
+  const sources = recommendationSources(kind);
+
+  for (const source of sources) {
+    const response = await fetchTmdbPath(source.path, source.params || {});
+    if (!response.ok) continue;
+
+    for (const result of response.results) {
+      const mediaType = result.media_type || source.mediaType;
+      if (mediaType !== 'movie' && mediaType !== 'tv') continue;
+      results.push(normalizeTmdbResult({ ...result, media_type: mediaType }, mediaType));
+    }
+  }
+
+  const recommendations = dedupeTmdbResults(results).filter((result) => result.title && result.overview);
+  if (!recommendations.length) return { ok: false, reason: 'empty', recommendation: null };
+
+  const recommendation = recommendations[Math.floor(Math.random() * recommendations.length)];
+  return { ok: true, recommendation };
 }
 
 function cleanupPendingTmdbChoices(now = Date.now()) {
@@ -117,6 +199,7 @@ module.exports = {
   createPendingTmdbChoice,
   createTmdbComment,
   consumePendingTmdbChoice,
+  getTmdbRecommendation,
   isTmdbConfigured,
   searchTmdbTitles,
   tmdbSelectDescription,
